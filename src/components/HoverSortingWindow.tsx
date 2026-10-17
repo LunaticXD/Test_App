@@ -85,7 +85,7 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
           createdAt: Date.now(),
           updatedAt: Date.now(),
           estimatedMinutes: result.estimatedMinutes || 30,
-          aiReasoning: result.reasoning || 'Categorized automatically by TaskOrbit AI',
+          aiReasoning: result.reasoning || 'Categorized automatically by CyberSpace',
         };
 
         const resultItem = {

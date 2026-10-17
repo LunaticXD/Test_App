@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <div className="flex items-center gap-2">
             <span className="font-black text-white tracking-tight text-sm sm:text-base font-mono">
-              TaskOrbit <span className="text-[#fcee0a]">CyberStudio</span>
+              Cyber<span className="text-[#fcee0a]">Space</span>
             </span>
             <span className="hidden sm:inline-block text-zinc-600 font-mono">/</span>
             <span className="hidden sm:inline-block text-xs font-mono font-bold text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded-md border border-cyan-500/30">

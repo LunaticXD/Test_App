@@ -173,7 +173,7 @@ export function generateFileCleanupScript(
   platform: 'mac_linux' | 'windows'
 ): string {
   if (platform === 'windows') {
-    let script = `@echo off\nREM TaskOrbit Desktop Organizer Script (PowerShell / Batch)\nREM Run in PowerShell or Command Prompt from your Desktop folder\n\n`;
+    let script = `@echo off\nREM CyberSpace Desktop Organizer Script (PowerShell / Batch)\nREM Run in PowerShell or Command Prompt from your Desktop folder\n\n`;
     const folders = Array.from(new Set(organizedFiles.map((f) => f.destinationFolder.replace(/\//g, '\\'))));
     folders.forEach((folder) => {
       script += `if not exist "${folder}" mkdir "${folder}"\n`;
@@ -186,7 +186,7 @@ export function generateFileCleanupScript(
     script += `\necho Desktop organization complete!\npause\n`;
     return script;
   } else {
-    let script = `#!/usr/bin/env bash\n# TaskOrbit Desktop Organizer Script for macOS & Linux\n# Run inside ~/Desktop\n\nset -e\ncd ~/Desktop\necho "Organizing Desktop files with TaskOrbit..."\n\n`;
+    let script = `#!/usr/bin/env bash\n# CyberSpace Desktop Organizer Script for macOS & Linux\n# Run inside ~/Desktop\n\nset -e\ncd ~/Desktop\necho "Organizing Desktop files with CyberSpace..."\n\n`;
     const folders = Array.from(new Set(organizedFiles.map((f) => f.destinationFolder)));
     folders.forEach((folder) => {
       script += `mkdir -p "${folder}"\n`;
@@ -215,7 +215,7 @@ export async function createOrganizedZipDownload(
       zip.folder(folderPath)?.file(fileName, original.fileObj);
     } else {
       // For simulated/demo files, create a placeholder text file indicating organization
-      const content = `File: ${org.originalName}\nCategory: ${org.category}\nOrganized by TaskOrbit AI\nTimestamp: ${new Date(org.lastModified).toISOString()}\nSorting Reason: ${org.reason}`;
+      const content = `File: ${org.originalName}\nCategory: ${org.category}\nOrganized by CyberSpace\nTimestamp: ${new Date(org.lastModified).toISOString()}\nSorting Reason: ${org.reason}`;
       zip.folder(folderPath)?.file(fileName, content);
     }
   }

@@ -298,7 +298,7 @@ export async function syncWithCloudStorage(
       body: JSON.stringify({
         tasks: currentTasks,
         clientLastSync: Date.now(),
-        deviceName: `TaskOrbit Desktop (${getDeviceId()})`,
+        deviceName: `CyberSpace Desktop (${getDeviceId()})`,
       }),
     });
 

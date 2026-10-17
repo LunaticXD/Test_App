@@ -81,7 +81,7 @@ export const ThemeSyncModal: React.FC<ThemeSyncModalProps> = ({
       themeSetting: isDark
         ? `Classroom UI: Dark Mode Enabled (System color-scheme: dark active)`
         : `Classroom UI: Light Mode Enabled (Standard Classroom theme)`,
-      instructions: 'Inherits system-wide prefers-color-scheme from TaskOrbit',
+      instructions: 'Inherits system-wide prefers-color-scheme from CyberSpace',
     },
   ];
 
@@ -110,7 +110,7 @@ export const ThemeSyncModal: React.FC<ThemeSyncModalProps> = ({
                 System-Wide Dark Mode & App Theme Engine
               </h3>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Synchronize appearance across TaskOrbit, Desktop OS, and connected apps
+                Synchronize appearance across CyberSpace, Desktop OS, and connected apps
               </p>
             </div>
           </div>

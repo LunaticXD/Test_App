@@ -120,7 +120,7 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#fcee0a] animate-ping"></span>
           <span className="font-black tracking-widest uppercase">
-            [TASKORBIT CYBERSTUDIO // NEURAL GATEWAY]
+            [CYBERSPACE // NEURAL GATEWAY]
           </span>
         </div>
 
@@ -169,7 +169,7 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
                   ARASAKA NEURAL RECOGNITION
                 </span>
                 <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-2 font-mono">
-                  TASKORBIT <span className="text-[#fcee0a]">CYBERSTUDIO</span>
+                  CYBER<span className="text-[#fcee0a]">SPACE</span>
                 </h1>
                 <p className="text-xs text-zinc-300 font-mono mt-1">
                   Cross-Platform Tasks, Kanban Board, Desktop Auto-Organizer & Connected Apps
@@ -284,7 +284,7 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
 
       {/* Bottom Footer Info */}
       <div className="relative z-10 flex items-center justify-between border-t border-zinc-800 pt-3 font-mono text-[11px] text-zinc-400">
-        <span>TASKORBIT SUITE // NIGHT CITY OS</span>
+        <span>CYBERSPACE // NIGHT CITY OS</span>
         <span className="text-[#fcee0a] font-bold">
           Auto-entering in {autoEnterCountdown}s... Click JACK IN to launch now
         </span>
