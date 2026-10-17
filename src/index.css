@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* ========================================================
+   1. CYBERPUNK 2077 / EDGERUNNERS (DEFAULT)
+   Based on uploaded reference images 1, 2, 6 & 7:
+   Iconic Edgerunners Yellow (#fcee0a), black circuit lines,
+   cyan (#00f0ff) and hot pink (#ff0055) neural HUD
+   ======================================================== */
+html.theme-cyberpunk,
+html.theme-cyberpunk body {
+  background-color: #070710 !important;
+  color: #fffde6;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(252, 238, 10, 0.08) 0%, transparent 60%),
+    linear-gradient(rgba(252, 238, 10, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(252, 238, 10, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+}
+
+html.theme-cyberpunk .dark\:bg-zinc-950,
+html.theme-cyberpunk .dark\:bg-zinc-900,
+html.theme-cyberpunk .dark\:bg-zinc-900\/95,
+html.theme-cyberpunk .dark\:bg-zinc-900\/80 {
+  background-color: rgba(12, 12, 20, 0.94) !important;
+  border-color: rgba(252, 238, 10, 0.3) !important;
+}
+
+html.theme-cyberpunk .cyber-glow-yellow {
+  box-shadow: 0 0 20px rgba(252, 238, 10, 0.4), inset 0 0 15px rgba(252, 238, 10, 0.1);
+}
+
+html.theme-cyberpunk .cyber-glow-cyan {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.35);
+}
+
+/* ========================================================
+   2. SYNTHWAVE SUNSET / NIGHT CITY SKYLINE
+   Based on uploaded reference images 3 & 4:
+   Night City panoramic mega-skyscrapers, sunset magenta,
+   cyan laser searchlights, and deep twilight indigo
+   ======================================================== */
+html.theme-synthwave,
+html.theme-synthwave body {
+  background-color: #080318 !important;
+  color: #fdf2f8;
+  background-image: 
+    radial-gradient(circle at 50% 10%, rgba(255, 0, 128, 0.12) 0%, transparent 65%),
+    linear-gradient(rgba(255, 0, 128, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 36px 36px, 36px 36px;
+}
+
+html.theme-synthwave .dark\:bg-zinc-950,
+html.theme-synthwave .dark\:bg-zinc-900,
+html.theme-synthwave .dark\:bg-zinc-900\/95,
+html.theme-synthwave .dark\:bg-zinc-900\/80 {
+  background-color: rgba(18, 9, 38, 0.94) !important;
+  border-color: rgba(255, 0, 128, 0.35) !important;
+}
+
+/* ========================================================
+   3. MATRIX CRT PHOSPHOR GREEN
+   ======================================================== */
+html.theme-matrix,
+html.theme-matrix body {
+  background-color: #020603 !important;
+  color: #4ade80;
+  background-image: 
+    linear-gradient(rgba(34, 197, 94, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+html.theme-matrix .dark\:bg-zinc-950,
+html.theme-matrix .dark\:bg-zinc-900,
+html.theme-matrix .dark\:bg-zinc-900\/95,
+html.theme-matrix .dark\:bg-zinc-900\/80 {
+  background-color: rgba(4, 16, 7, 0.96) !important;
+  border-color: rgba(34, 197, 94, 0.35) !important;
+}
+
+/* ========================================================
+   4. OBSIDIAN STEALTH BLACK
+   ======================================================== */
+html.theme-obsidian,
+html.theme-obsidian body {
+  background-color: #040406 !important;
+  color: #e2e8f0;
+}
+
+html.theme-obsidian .dark\:bg-zinc-950,
+html.theme-obsidian .dark\:bg-zinc-900,
+html.theme-obsidian .dark\:bg-zinc-900\/95,
+html.theme-obsidian .dark\:bg-zinc-900\/80 {
+  background-color: rgba(12, 12, 18, 0.95) !important;
+  border-color: rgba(56, 189, 248, 0.22) !important;
+}
+
+/* ========================================================
+   5. NEO TOKYO SOLAR LIGHT
+   ======================================================== */
+html.theme-solar,
+html.theme-solar body {
+  background-color: #f4f7fc !important;
+  color: #0f172a;
+}
+
+/* Scanline animation */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.scanline-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(252, 238, 10, 0.7), transparent);
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+}
+
+/* Custom Cyberpunk Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(252, 238, 10, 0.4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(252, 238, 10, 0.8);
+  box-shadow: 0 0 10px rgba(252, 238, 10, 0.6);
+}

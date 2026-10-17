@@ -1,0 +1,6 @@
+{
+  "name": "TaskOrbit AI - Sync & Auto-Organizer",
+  "description": "Cross-platform task tracker with offline synchronization, AI smart sorting hover window, desktop file organizer, and multi-app integrations (VS Code, Claude, Git, Gmail, Classroom).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
