@@ -1,0 +1,12 @@
+# Supply-chain hardening (see README "Security setup")
+# 1. Cooldown: refuse package versions published less than 7 days ago (minutes)
+minimumReleaseAge: 10080
+# 2. Postinstall scripts: pnpm 10 blocks all dependency scripts unless listed here
+onlyBuiltDependencies: []
+# 3. Block git/tarball URL dependencies inside transitive packages
+blockExoticSubdeps: true
+# 4. Refuse versions whose publish trust level dropped vs earlier releases
+trustPolicy: no-downgrade
+# undici-types@6.21.0 (types only, via @types/node) trips the check with no real risk
+trustPolicyExclude:
+  - undici-types@6.21.0
