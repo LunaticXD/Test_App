@@ -17,7 +17,6 @@ import {
   ToggleRight,
 } from 'lucide-react';
 import { AppConnectorConfig, Task } from '../types';
-import { triggerTaskCompletionEffect } from '../lib/celebrate';
 
 interface AppConnectorsModalProps {
   isOpen: boolean;
@@ -52,7 +51,7 @@ export const AppConnectorsModal: React.FC<AppConnectorsModalProps> = ({
       case 'GraduationCap':
         return <GraduationCap className="w-5 h-5 text-emerald-500" />;
       default:
-        return <Layers className="w-5 h-5 text-indigo-500" />;
+        return <Layers className="w-5 h-5 text-[color:var(--accent)]" />;
     }
   };
 
@@ -76,7 +75,6 @@ export const AppConnectorsModal: React.FC<AppConnectorsModalProps> = ({
       if (data.tasks && data.tasks.length > 0) {
         onImportTasks(data.tasks);
         setLastImportCount((prev) => ({ ...prev, [appId]: data.tasks.length }));
-        triggerTaskCompletionEffect();
       }
     } catch (err) {
       console.error('Import error:', err);
@@ -99,7 +97,7 @@ export const AppConnectorsModal: React.FC<AppConnectorsModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-zinc-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[color:var(--accent)] to-[color:var(--secondary)] flex items-center justify-center text-[color:var(--accent-ink)] shadow-md">
               <Layers className="w-5 h-5" />
             </div>
             <div>
@@ -120,20 +118,20 @@ export const AppConnectorsModal: React.FC<AppConnectorsModalProps> = ({
         </div>
 
         {/* Global Import Action */}
-        <div className="my-4 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/40 dark:to-violet-950/40 border border-indigo-100 dark:border-indigo-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="my-4 p-4 rounded-xl bg-gradient-to-r from-[color:var(--accent)]/10 to-[color:var(--secondary)]/10 border border-[color:var(--accent)]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span className="text-xs font-bold text-[color:var(--accent)] dark:text-[color:var(--accent)] flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[color:var(--accent)] dark:text-[color:var(--accent)]" />
               Unified Multi-App Synchronization
             </span>
-            <p className="text-[11px] text-indigo-700 dark:text-indigo-300">
+            <p className="text-[11px] text-[color:var(--accent)] dark:text-[color:var(--accent)]">
               Syncs TODO comments, AI conversation action items, GitHub PRs, flagged emails, and Classroom assignments
             </p>
           </div>
 
           <button
             onClick={handleImportAll}
-            className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-95"
+            className="px-3.5 py-2 bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-[color:var(--accent-ink)] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-95"
           >
             <DownloadCloud className="w-4 h-4" />
             Sync All Connected Apps
@@ -187,7 +185,7 @@ export const AppConnectorsModal: React.FC<AppConnectorsModalProps> = ({
                     title={connector.connected ? 'Disconnect App' : 'Connect App'}
                   >
                     {connector.connected ? (
-                      <ToggleRight className="w-7 h-7 text-indigo-600" />
+                      <ToggleRight className="w-7 h-7 text-[color:var(--accent)]" />
                     ) : (
                       <ToggleLeft className="w-7 h-7 text-slate-400" />
                     )}
@@ -196,10 +194,10 @@ export const AppConnectorsModal: React.FC<AppConnectorsModalProps> = ({
                   <button
                     disabled={!connector.connected || importingApp === connector.id}
                     onClick={() => handleImport(connector.id)}
-                    className="px-3 py-1.5 bg-slate-100 dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-slate-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                    className="px-3 py-1.5 bg-slate-100 dark:bg-zinc-800 hover:bg-[color:var(--accent)]/10 dark:hover:bg-[color:var(--accent)]/10 text-slate-700 dark:text-zinc-200 hover:text-[color:var(--accent)] dark:hover:text-[color:var(--accent)] border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
                   >
                     {importingApp === connector.id ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-[color:var(--accent)]" />
                     ) : (
                       <DownloadCloud className="w-3.5 h-3.5" />
                     )}

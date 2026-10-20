@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { Task, TaskStatus, Priority } from '../types';
 import { TaskCard } from './TaskCard';
-import { triggerTaskCompletionEffect } from '../lib/celebrate';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -38,7 +37,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     {
       id: 'in_progress',
       title: 'In Progress',
-      color: 'bg-indigo-500',
+      color: 'bg-[color:var(--accent)]',
       desc: 'Currently executing items',
     },
     {
@@ -57,9 +56,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     e.preventDefault();
     const taskId = e.dataTransfer.getData('text/plain');
     if (taskId) {
-      if (targetStatus === 'completed') {
-        triggerTaskCompletionEffect();
-      }
       onMoveTask(taskId, targetStatus);
     }
   };
@@ -91,7 +87,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               <button
                 onClick={() => onNewTaskInColumn(col.id)}
                 title={`Add task to ${col.title}`}
-                className="p-1 rounded-md text-slate-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition-colors"
+                className="p-1 rounded-md text-slate-500 hover:text-[color:var(--accent)] dark:text-zinc-400 dark:hover:text-[color:var(--accent)] hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition-colors"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -134,7 +130,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                             onMoveTask(task.id, prevStatus);
                           }}
                           title="Move Left"
-                          className="p-1 text-slate-500 hover:text-indigo-600 rounded-sm"
+                          className="p-1 text-slate-500 hover:text-[color:var(--accent)] rounded-sm"
                         >
                           <ArrowLeft className="w-3 h-3" />
                         </button>
@@ -146,13 +142,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                             e.stopPropagation();
                             const nextStatus: TaskStatus =
                               col.id === 'todo' ? 'in_progress' : 'completed';
-                            if (nextStatus === 'completed') {
-                              triggerTaskCompletionEffect();
-                            }
                             onMoveTask(task.id, nextStatus);
                           }}
                           title="Move Right"
-                          className="p-1 text-slate-500 hover:text-indigo-600 rounded-sm"
+                          className="p-1 text-slate-500 hover:text-[color:var(--accent)] rounded-sm"
                         >
                           <ArrowRight className="w-3 h-3" />
                         </button>

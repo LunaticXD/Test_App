@@ -18,7 +18,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Task, Priority } from '../types';
-import { triggerTaskCompletionEffect } from '../lib/celebrate';
 
 interface TaskCardProps {
   task: Task;
@@ -104,9 +103,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!isDone) {
-      triggerTaskCompletionEffect();
-    }
+    // The celebration (confetti + chime) is fired once by the app-level handler
     onToggleStatus(task.id);
   };
 
@@ -116,7 +113,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       className={`group relative p-4 rounded-xl border transition-all cursor-pointer select-none ${
         isDone
           ? 'bg-slate-50/70 dark:bg-zinc-900/50 border-slate-200/60 dark:border-zinc-800/60 opacity-75'
-          : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md'
+          : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 shadow-xs hover:border-[color:var(--accent)]/40 dark:hover:border-[color:var(--accent)]/40 hover:shadow-md'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -124,12 +121,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         <button
           type="button"
           onClick={handleCheckboxClick}
-          className="mt-0.5 shrink-0 transition-transform active:scale-90 text-slate-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400"
+          className="mt-0.5 shrink-0 transition-transform active:scale-90 text-slate-400 hover:text-[color:var(--accent)] dark:text-zinc-500 dark:hover:text-[color:var(--accent)]"
         >
           {isDone ? (
             <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-100 dark:fill-emerald-950/80" />
           ) : (
-            <Circle className="w-5 h-5 hover:stroke-indigo-600" />
+            <Circle className="w-5 h-5 hover:stroke-[color:var(--accent)]" />
           )}
         </button>
 
@@ -151,7 +148,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             >
               <button
                 onClick={() => onEdit(task)}
-                className="p-1 text-slate-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 rounded-md"
+                className="p-1 text-slate-400 hover:text-[color:var(--accent)] dark:text-zinc-500 dark:hover:text-[color:var(--accent)] rounded-md"
               >
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
@@ -175,14 +172,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <div className="mt-2.5 space-y-1.5">
               <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-zinc-500">
                 <span className="flex items-center gap-1 font-medium">
-                  <CheckSquare className="w-3 h-3 text-indigo-500" />
+                  <CheckSquare className="w-3 h-3 text-[color:var(--accent)]" />
                   Subtasks: {completedSubtasks}/{totalSubtasks}
                 </span>
                 <span>{Math.round((completedSubtasks / totalSubtasks) * 100)}%</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-indigo-500 h-full rounded-full transition-all"
+                  className="bg-[color:var(--accent)] h-full rounded-full transition-all"
                   style={{ width: `${(completedSubtasks / totalSubtasks) * 100}%` }}
                 ></div>
               </div>

@@ -61,7 +61,20 @@ import { TaskModal } from './components/TaskModal';
 import { AppConnectorsModal } from './components/AppConnectorsModal';
 import { ThemeSyncModal } from './components/ThemeSyncModal';
 import { OpeningIntro } from './components/OpeningIntro';
+import { HomeScreen } from './components/HomeScreen';
+import { CommandPalette } from './components/CommandPalette';
+import { nextTheme } from './lib/theme';
 import { CyberMusicPlayerModal } from './components/CyberMusicPlayerModal';
+
+const FEATURES: ActiveFeature[] = [
+  'home', 'tasks', 'kanban', 'analytics', 'organizer', 'hover_window', 'connectors', 'themes', 'darkmode_sync',
+];
+
+function getInitialFeature(): ActiveFeature {
+  if (typeof window === 'undefined') return 'home';
+  const hash = window.location.hash.replace('#/', '').replace('#', '');
+  return (FEATURES as string[]).includes(hash) ? (hash as ActiveFeature) : 'home';
+}
 
 export default function App() {
   // State: Tasks, Connectors, Theme
@@ -69,9 +82,16 @@ export default function App() {
   const [connectors, setConnectors] = useState<AppConnectorConfig[]>(() => loadConnectors());
   const [theme, setTheme] = useState<ThemeMode>(() => loadTheme());
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile_preview'>('desktop');
-  const [activeFeature, setActiveFeature] = useState<ActiveFeature>('tasks');
+  const [activeFeature, setActiveFeature] = useState<ActiveFeature>(getInitialFeature);
   const [isMuted, setIsMuted] = useState(false);
-  const [showOpeningIntro, setShowOpeningIntro] = useState(false);
+  const [showOpeningIntro, setShowOpeningIntro] = useState(() => {
+    try {
+      return sessionStorage.getItem('cyberspace-intro-seen') !== '1';
+    } catch {
+      return true;
+    }
+  });
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
   // Sidebar State
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -84,7 +104,7 @@ export default function App() {
   const quickAudioInputRef = useRef<HTMLInputElement | null>(null);
 
   // Modals & Floating Window
-  const [isHoverWindowOpen, setIsHoverWindowOpen] = useState(true);
+  const [isHoverWindowOpen, setIsHoverWindowOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isConnectorsModalOpen, setIsConnectorsModalOpen] = useState(false);
@@ -149,23 +169,61 @@ export default function App() {
     }
   };
 
-  // Keyboard Shortcuts: H for Hover Window, N for New Task
+  // Remember that the intro was seen this session
+  useEffect(() => {
+    if (!showOpeningIntro) {
+      try {
+        sessionStorage.setItem('cyberspace-intro-seen', '1');
+      } catch {
+        /* storage unavailable */
+      }
+    }
+  }, [showOpeningIntro]);
+
+  // Keep the URL hash and the active page in sync (back/forward buttons work)
+  useEffect(() => {
+    if (window.location.hash !== `#/${activeFeature}`) {
+      window.history.replaceState(null, '', `#/${activeFeature}`);
+    }
+  }, [activeFeature]);
+
+  useEffect(() => {
+    const onHash = () => setActiveFeature(getInitialFeature());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // Keyboard shortcuts: Ctrl/Cmd+K palette, H hover window, N new task, Esc closes modals
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsPaletteOpen((prev) => !prev);
         return;
       }
+      if (e.key === 'Escape') {
+        setIsTaskModalOpen(false);
+        setIsConnectorsModalOpen(false);
+        setIsThemeModalOpen(false);
+        setIsMusicPlayerModalOpen(false);
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable) return;
+      if (showOpeningIntro || isPaletteOpen || isTaskModalOpen || isConnectorsModalOpen || isThemeModalOpen || isMusicPlayerModalOpen) return;
       if (e.key === 'h' || e.key === 'H') {
         setIsHoverWindowOpen((prev) => !prev);
       }
       if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
         setEditingTask(null);
         setIsTaskModalOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [showOpeningIntro, isPaletteOpen, isTaskModalOpen, isConnectorsModalOpen, isThemeModalOpen, isMusicPlayerModalOpen]);
 
   // Derived existing projects list
   const existingProjects = useMemo(() => {
@@ -185,25 +243,26 @@ export default function App() {
 
   // Handlers
   const handleToggleTaskStatus = (id: string) => {
+    const target = tasks.find((t) => t.id === id);
+    if (!target) return;
+    const nextStatus: TaskStatus = target.status === 'completed' ? 'todo' : 'completed';
+    if (nextStatus === 'completed') {
+      soundFX.playSuccess();
+      triggerTaskCompletionEffect();
+    } else {
+      soundFX.playBlip();
+    }
     setTasks((prev) => {
-      const updated = prev.map((t) => {
-        if (t.id === id) {
-          const nextStatus: TaskStatus = t.status === 'completed' ? 'todo' : 'completed';
-          if (nextStatus === 'completed') {
-            soundFX.playSuccess();
-            triggerTaskCompletionEffect();
-          } else {
-            soundFX.playBlip();
-          }
-          return {
-            ...t,
-            status: nextStatus,
-            completedAt: nextStatus === 'completed' ? Date.now() : undefined,
-            updatedAt: Date.now(),
-          };
-        }
-        return t;
-      });
+      const updated = prev.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              status: nextStatus,
+              completedAt: nextStatus === 'completed' ? Date.now() : undefined,
+              updatedAt: Date.now(),
+            }
+          : t
+      );
       saveTasksToStorage(updated);
       return updated;
     });
@@ -302,7 +361,9 @@ export default function App() {
     soundFX.playSuccess();
     triggerTaskCompletionEffect();
     setTasks((prev) => {
-      const updated = [...newTasks, ...prev];
+      const seen = new Set(prev.map((t) => `${t.source ?? ''}|${t.title}`));
+      const fresh = newTasks.filter((t) => !seen.has(`${t.source ?? ''}|${t.title}`));
+      const updated = [...fresh, ...prev];
       saveTasksToStorage(updated);
       return updated;
     });
@@ -324,6 +385,13 @@ export default function App() {
     setIsMuted(muted);
   };
 
+  const navigateTo = (feature: ActiveFeature) => {
+    soundFX.playBlip();
+    setActiveFeature(feature);
+    setIsMobileSidebarOpen(false);
+    window.scrollTo({ top: 0 });
+  };
+
   const handleManualSync = async () => {
     soundFX.playBlip();
     setSyncState((prev) => ({ ...prev, isSyncing: true }));
@@ -342,6 +410,22 @@ export default function App() {
   // Render the selected main feature view
   const renderFeatureContent = () => {
     switch (activeFeature) {
+      case 'home':
+        return (
+          <HomeScreen
+            theme={theme}
+            tasksCount={tasksCount}
+            connectedAppsCount={connectors.filter((c) => c.connected).length}
+            onNavigate={navigateTo}
+            onNewTask={() => {
+              soundFX.playBlip();
+              setEditingTask(null);
+              setIsTaskModalOpen(true);
+            }}
+            onOpenCommandPalette={() => setIsPaletteOpen(true)}
+          />
+        );
+
       case 'tasks':
         return (
           <TaskTrackerView
@@ -384,7 +468,7 @@ export default function App() {
               </div>
               <button
                 onClick={() => handleNewTaskInColumn('todo')}
-                className="px-3 py-1.5 rounded-xl bg-[#fcee0a] hover:bg-[#ffea00] text-black font-black font-mono text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black font-black font-mono text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[3]" />
                 <span className="hidden sm:inline">Add Task</span>
@@ -429,10 +513,10 @@ export default function App() {
       case 'hover_window':
         return (
           <div className="space-y-6">
-            <div className="p-6 rounded-3xl bg-zinc-950/80 border border-[#fcee0a]/30 shadow-xl space-y-4 font-mono">
+            <div className="p-6 rounded-3xl bg-zinc-950/80 border border-[color:var(--accent)]/30 shadow-xl space-y-4 font-mono">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#fcee0a] to-cyan-400 flex items-center justify-center text-black font-black shadow-lg shadow-[#fcee0a]/20">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[color:var(--accent)] to-cyan-400 flex items-center justify-center text-black font-black shadow-lg shadow-[color:var(--accent)]/20">
                     <Sparkles className="w-6 h-6" />
                   </div>
                   <div>
@@ -452,8 +536,8 @@ export default function App() {
                   }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                     isHoverWindowOpen
-                      ? 'bg-[#fcee0a] text-black border-[#fcee0a] shadow-md shadow-[#fcee0a]/30'
-                      : 'bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-[#fcee0a]'
+                      ? 'bg-[color:var(--accent)] text-black border-[color:var(--accent)] shadow-md shadow-[color:var(--accent)]/30'
+                      : 'bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-[color:var(--accent)]'
                   }`}
                 >
                   {isHoverWindowOpen ? 'HUD Window Active (H to toggle)' : 'Launch HUD Window'}
@@ -462,7 +546,7 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 rounded-2xl bg-black/60 border border-zinc-800 space-y-2">
-                  <span className="text-[10px] font-bold text-[#fcee0a] uppercase tracking-wider block">
+                  <span className="text-[10px] font-bold text-[color:var(--accent)] uppercase tracking-wider block">
                     Mode 1: Task Auto-Categorization
                   </span>
                   <p className="text-xs text-zinc-300">
@@ -520,7 +604,7 @@ export default function App() {
                       soundFX.playSuccess();
                       triggerTaskCompletionEffect();
                     }}
-                    className="text-xs px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-[#fcee0a]/20 text-zinc-300 hover:text-[#fcee0a] border border-zinc-800 hover:border-[#fcee0a]/40 font-mono transition-colors cursor-pointer text-left"
+                    className="text-xs px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-[color:var(--accent)]/20 text-zinc-300 hover:text-[color:var(--accent)] border border-zinc-800 hover:border-[color:var(--accent)]/40 font-mono transition-colors cursor-pointer text-left"
                   >
                     + {sample}
                   </button>
@@ -537,7 +621,7 @@ export default function App() {
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-white font-mono flex items-center gap-2">
                   <span>Connected Applications</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#fcee0a]/20 text-[#fcee0a] border border-[#fcee0a]/30">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color:var(--accent)]/20 text-[color:var(--accent)] border border-[color:var(--accent)]/30">
                     {connectors.filter((c) => c.connected).length} ACTIVE
                   </span>
                 </h2>
@@ -613,7 +697,7 @@ export default function App() {
                           soundFX.playBlip();
                           setIsConnectorsModalOpen(true);
                         }}
-                        className="text-[#fcee0a] hover:underline cursor-pointer"
+                        className="text-[color:var(--accent)] hover:underline cursor-pointer"
                       >
                         Settings
                       </button>
@@ -641,7 +725,7 @@ export default function App() {
             <div className="pb-2 border-b border-zinc-800">
               <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 <span>System-Wide Dark Mode & App Sync</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#fcee0a]/20 text-[#fcee0a] border border-[#fcee0a]/30">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color:var(--accent)]/20 text-[color:var(--accent)] border border-[color:var(--accent)]/30">
                   SYSTEM READY
                 </span>
               </h2>
@@ -666,7 +750,7 @@ export default function App() {
                     onClick={() => handleSelectTheme(m.id)}
                     className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-[#fcee0a]/10 border-[#fcee0a] shadow-lg shadow-[#fcee0a]/20 text-[#fcee0a]'
+                        ? 'bg-[color:var(--accent)]/10 border-[color:var(--accent)] shadow-lg shadow-[color:var(--accent)]/20 text-[color:var(--accent)]'
                         : 'bg-zinc-950/80 border-zinc-800 text-zinc-300 hover:border-zinc-700'
                     }`}
                   >
@@ -689,7 +773,7 @@ export default function App() {
                 </div>
                 <button
                   onClick={() => setIsThemeModalOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-[#fcee0a] text-black text-xs font-black cursor-pointer shadow-sm"
+                  className="px-3 py-1.5 rounded-xl bg-[color:var(--accent)] text-black text-xs font-black cursor-pointer shadow-sm"
                 >
                   Open Full Exporter
                 </button>
@@ -723,7 +807,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen text-slate-900 dark:text-zinc-100 transition-colors selection:bg-[#fcee0a]/30 selection:text-[#fcee0a] relative overflow-x-hidden flex flex-col bg-[#070710]">
+    <div className="min-h-screen text-zinc-100 transition-colors selection:bg-[color:var(--accent)]/30 selection:text-[color:var(--accent)] relative overflow-x-hidden flex flex-col bg-transparent">
       {/* Opening Intro Neural Gateway (Dismissable / Replayable) */}
       <AnimatePresence>
         {showOpeningIntro && (
@@ -748,15 +832,15 @@ export default function App() {
         isHoverWindowOpen={isHoverWindowOpen}
         theme={theme}
         onToggleTheme={() => {
-          const next = theme === 'cyberpunk' ? 'synthwave' : 'cyberpunk';
-          handleSelectTheme(next);
+          handleSelectTheme(nextTheme(theme));
         }}
         viewMode={viewMode}
         onToggleViewMode={() =>
           setViewMode((prev) => (prev === 'desktop' ? 'mobile_preview' : 'desktop'))
         }
         activeFeature={activeFeature}
-        onSelectFeature={setActiveFeature}
+        onSelectFeature={navigateTo}
+        onOpenCommandPalette={() => setIsPaletteOpen(true)}
         isMuted={isMuted}
         onToggleMute={handleToggleMute}
         onOpenNewTaskModal={() => {
@@ -769,7 +853,7 @@ export default function App() {
       />
 
       {/* Cyber BGM Soundtrack Bar */}
-      <div className="bg-black/95 border-b border-[#fcee0a]/20 px-3 sm:px-6 py-2 flex items-center justify-between text-xs font-mono">
+      <div className="bg-black/95 border-b border-[color:var(--accent)]/20 px-3 sm:px-6 py-2 flex items-center justify-between text-xs font-mono">
         <input
           ref={quickAudioInputRef}
           type="file"
@@ -788,7 +872,7 @@ export default function App() {
               soundFX.playBlip();
               soundFX.togglePlay();
             }}
-            className="w-7 h-7 rounded-lg bg-[#fcee0a] hover:bg-[#ffea00] text-black flex items-center justify-center shrink-0 cursor-pointer shadow-sm shadow-[#fcee0a]/20"
+            className="w-7 h-7 rounded-lg bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black flex items-center justify-center shrink-0 cursor-pointer shadow-sm shadow-[color:var(--accent)]/20"
             title={isPlayingAudio ? 'Pause Audio' : 'Play Audio'}
           >
             {isPlayingAudio ? (
@@ -806,9 +890,9 @@ export default function App() {
             className="flex items-center gap-2 cursor-pointer hover:opacity-90 overflow-hidden"
             title="Click to open Cyber Soundtrack Station (Upload / Switch Track)"
           >
-            <span className="w-2 h-2 rounded-full bg-[#fcee0a] animate-ping shrink-0"></span>
-            <span className="text-[#fcee0a] font-bold shrink-0">SOUNDTRACK:</span>
-            <span className="text-zinc-200 truncate text-[11px] sm:text-xs hover:underline decoration-[#fcee0a]">
+            <span className="w-2 h-2 rounded-full bg-[color:var(--accent)] animate-ping shrink-0"></span>
+            <span className="text-[color:var(--accent)] font-bold shrink-0">SOUNDTRACK:</span>
+            <span className="text-zinc-200 truncate text-[11px] sm:text-xs hover:underline decoration-[color:var(--accent)]">
               "{activeTrackName}" {soundFX.currentTrack.source === 'custom_file' ? '(Custom Loaded)' : '— Dawid Podsiadło'}
             </span>
           </div>
@@ -829,7 +913,7 @@ export default function App() {
               soundFX.playBlip();
               setIsMusicPlayerModalOpen(true);
             }}
-            className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[#fcee0a] text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[color:var(--accent)] text-[10px] font-bold flex items-center gap-1 cursor-pointer"
             title="Open Full Cyber Player & Lyrics"
           >
             <Disc className="w-3 h-3 animate-spin" />
@@ -841,7 +925,7 @@ export default function App() {
               soundFX.playBlip();
               setShowOpeningIntro(true);
             }}
-            className="text-[10px] text-zinc-400 hover:text-[#fcee0a] flex items-center gap-1 cursor-pointer"
+            className="text-[10px] text-zinc-400 hover:text-[color:var(--accent)] flex items-center gap-1 cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
             <span className="hidden sm:inline">Intro</span>
@@ -849,9 +933,9 @@ export default function App() {
 
           <button
             onClick={handleToggleMute}
-            className="text-[10px] font-bold text-[#fcee0a] bg-[#fcee0a]/20 border border-[#fcee0a]/40 px-2 py-0.5 rounded cursor-pointer"
+            className="text-[10px] font-bold text-[color:var(--accent)] bg-[color:var(--accent)]/20 border border-[color:var(--accent)]/40 px-2 py-0.5 rounded cursor-pointer"
           >
-            {isMuted ? 'UNMUTE BGM' : 'MUTED'}
+            {isMuted ? 'UNMUTE BGM' : 'MUTE BGM'}
           </button>
         </div>
       </div>
@@ -862,9 +946,7 @@ export default function App() {
         <div className="hidden md:block">
           <Sidebar
             activeFeature={activeFeature}
-            onSelectFeature={(feat) => {
-              setActiveFeature(feat);
-            }}
+            onSelectFeature={navigateTo}
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
             onOpenNewTaskModal={() => {
@@ -905,14 +987,11 @@ export default function App() {
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-                className="fixed inset-y-0 left-0 z-50 w-72 bg-[#070710] shadow-2xl md:hidden"
+                className="fixed inset-y-0 left-0 z-50 w-72 bg-[color:var(--bg)] shadow-2xl md:hidden"
               >
                 <Sidebar
                   activeFeature={activeFeature}
-                  onSelectFeature={(feat) => {
-                    setActiveFeature(feat);
-                    setIsMobileSidebarOpen(false);
-                  }}
+                  onSelectFeature={navigateTo}
                   isCollapsed={false}
                   onToggleCollapse={() => setIsMobileSidebarOpen(false)}
                   onOpenNewTaskModal={() => {
@@ -963,7 +1042,7 @@ export default function App() {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                className="w-full max-w-[400px] h-[820px] rounded-[48px] bg-zinc-950 p-3 shadow-2xl border-4 border-[#fcee0a]/40 relative overflow-hidden flex flex-col box-border"
+                className="w-full max-w-[400px] h-[820px] rounded-[48px] bg-zinc-950 p-3 shadow-2xl border-4 border-[color:var(--accent)]/40 relative overflow-hidden flex flex-col box-border"
               >
                 {/* Android Camera Notch */}
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-40 flex items-center justify-center">
@@ -971,7 +1050,7 @@ export default function App() {
                 </div>
 
                 {/* Android Status Bar */}
-                <div className="h-7 w-full flex items-center justify-between px-6 pt-2 text-[11px] font-semibold text-[#fcee0a] z-30 select-none font-mono">
+                <div className="h-7 w-full flex items-center justify-between px-6 pt-2 text-[11px] font-semibold text-[color:var(--accent)] z-30 select-none font-mono">
                   <span>09:41</span>
                   <div className="flex items-center gap-1.5">
                     <Wifi className="w-3.5 h-3.5" />
@@ -981,11 +1060,12 @@ export default function App() {
                 </div>
 
                 {/* Android Screen Inner Container */}
-                <div className="flex-1 bg-[#090912] rounded-[38px] overflow-y-auto overflow-x-hidden p-2.5 pt-3 pb-16 box-border text-xs">
+                <div className="flex-1 bg-[color:var(--bg)] rounded-[38px] overflow-y-auto overflow-x-hidden p-2.5 pt-3 pb-16 box-border text-xs">
                   {/* Android Quick Nav Pill Ribbon */}
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 font-mono border-b border-zinc-800 scrollbar-none">
                     {(
                       [
+                        { id: 'home', label: 'Home' },
                         { id: 'tasks', label: 'Tasks' },
                         { id: 'kanban', label: 'Kanban' },
                         { id: 'analytics', label: 'Stats' },
@@ -996,13 +1076,10 @@ export default function App() {
                     ).map((pill) => (
                       <button
                         key={pill.id}
-                        onClick={() => {
-                          soundFX.playBlip();
-                          setActiveFeature(pill.id);
-                        }}
+                        onClick={() => navigateTo(pill.id)}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
                           activeFeature === pill.id
-                            ? 'bg-[#fcee0a] text-black shadow-xs font-black'
+                            ? 'bg-[color:var(--accent)] text-black shadow-xs font-black'
                             : 'bg-zinc-900 text-zinc-400 hover:text-white'
                         }`}
                       >
@@ -1015,7 +1092,7 @@ export default function App() {
                 </div>
 
                 {/* Android Gesture Bottom Pill */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#fcee0a]/70 rounded-full z-40"></div>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-[color:var(--accent)]/70 rounded-full z-40"></div>
               </motion.div>
             </div>
           )}
@@ -1034,7 +1111,9 @@ export default function App() {
       />
 
       {/* Task Creation & Edit Modal */}
+      {isTaskModalOpen && (
       <TaskModal
+        key={editingTask?.id ?? 'new-task'}
         isOpen={isTaskModalOpen}
         onClose={() => {
           setIsTaskModalOpen(false);
@@ -1043,6 +1122,31 @@ export default function App() {
         task={editingTask}
         onSave={handleSaveTask}
         existingProjects={existingProjects}
+      />
+      )}
+
+      <CyberMusicPlayerModal
+        isOpen={isMusicPlayerModalOpen}
+        onClose={() => setIsMusicPlayerModalOpen(false)}
+      />
+
+      <CommandPalette
+        isOpen={isPaletteOpen}
+        onClose={() => setIsPaletteOpen(false)}
+        tasks={tasks}
+        onSelectTask={(t) => {
+          setEditingTask(t);
+          setIsTaskModalOpen(true);
+        }}
+        onNavigate={navigateTo}
+        onNewTask={() => {
+          setEditingTask(null);
+          setIsTaskModalOpen(true);
+        }}
+        onToggleHoverWindow={() => setIsHoverWindowOpen((prev) => !prev)}
+        onOpenThemeModal={() => setIsThemeModalOpen(true)}
+        onOpenConnectors={() => setIsConnectorsModalOpen(true)}
+        onManualSync={handleManualSync}
       />
 
       {/* App Connectors Modal (VS Code, Claude, Git, Gmail, Classroom) */}

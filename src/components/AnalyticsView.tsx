@@ -16,12 +16,45 @@ interface AnalyticsViewProps {
   tasks: Task[];
 }
 
+// Consecutive-day streaks from the days on which at least one task was completed
+function computeStreaks(completedAts: number[]): { current: number; best: number } {
+  const toDayNumber = (ts: number) => {
+    const d = new Date(ts);
+    return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+  };
+  const days = Array.from(new Set(completedAts.map(toDayNumber))).sort((a, b) => a - b);
+  if (days.length === 0) return { current: 0, best: 0 };
+
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < days.length; i++) {
+    run = days[i] === days[i - 1] + 1 ? run + 1 : 1;
+    best = Math.max(best, run);
+  }
+
+  // The current streak is still alive if the last completion was today or yesterday
+  const today = toDayNumber(Date.now());
+  const last = days[days.length - 1];
+  let current = 0;
+  if (last === today || last === today - 1) {
+    current = 1;
+    for (let i = days.length - 1; i > 0 && days[i] === days[i - 1] + 1; i--) current++;
+  }
+  return { current, best };
+}
+
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
   const total = tasks.length;
   const completed = tasks.filter((t) => t.status === 'completed');
   const inProgress = tasks.filter((t) => t.status === 'in_progress');
   const todo = tasks.filter((t) => t.status === 'todo');
   const completionRate = total > 0 ? Math.round((completed.length / total) * 100) : 0;
+  const streaks = computeStreaks(
+    completed.filter((t) => t.completedAt).map((t) => t.completedAt as number)
+  );
+  const recentlyCompleted = [...completed].sort(
+    (a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0)
+  );
 
   // Urgent pending count
   const urgentCount = tasks.filter((t) => t.priority === 'Urgent' && t.status !== 'completed').length;
@@ -78,10 +111,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
               Completion Streak
             </span>
             <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
-              5 Days <Flame className="w-5 h-5 text-amber-500 fill-amber-500" />
+              {streaks.current} {streaks.current === 1 ? 'Day' : 'Days'}{' '}
+              <Flame className="w-5 h-5 text-amber-500 fill-amber-500" />
             </div>
             <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-0.5">
-              Personal best: 8 days
+              Personal best: {streaks.best} {streaks.best === 1 ? 'day' : 'days'}
             </p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-600 dark:text-amber-400">
@@ -98,11 +132,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
             <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
               {(completedMinutes / 60).toFixed(1)}h
             </div>
-            <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium mt-0.5">
+            <p className="text-[11px] text-[color:var(--accent)] dark:text-[color:var(--accent)] font-medium mt-0.5">
               of {(totalMinutes / 60).toFixed(1)}h estimated
             </p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+          <div className="w-12 h-12 rounded-2xl bg-[color:var(--accent)]/10 dark:bg-[color:var(--accent)]/10 border border-[color:var(--accent)]/40 dark:border-[color:var(--accent)]/40 flex items-center justify-center text-[color:var(--accent)] dark:text-[color:var(--accent)]">
             <Clock className="w-6 h-6" />
           </div>
         </div>
@@ -132,7 +166,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs">
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-zinc-800">
             <div className="flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-indigo-500" />
+              <FolderTree className="w-4 h-4 text-[color:var(--accent)]" />
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 Completion by Project
               </h3>
@@ -157,7 +191,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-indigo-600 h-full rounded-full transition-all duration-500"
+                      className="bg-[color:var(--accent)] h-full rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     ></div>
                   </div>
@@ -171,7 +205,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs">
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-zinc-800">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-violet-500" />
+              <Layers className="w-4 h-4 text-[color:var(--accent)]" />
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 Tasks Ingested by App Source
               </h3>
@@ -183,7 +217,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
             {Object.entries(sourceMap).map(([src, count]) => (
               <div
                 key={src}
-                className="p-3 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-850/40 flex items-center justify-between text-xs"
+                className="p-3 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-800/40 flex items-center justify-between text-xs"
               >
                 <div>
                   <span className="font-bold text-slate-900 dark:text-white capitalize">
@@ -193,7 +227,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
                     {((count / total) * 100).toFixed(0)}% of total
                   </p>
                 </div>
-                <span className="text-base font-black text-indigo-600 dark:text-indigo-400">
+                <span className="text-base font-black text-[color:var(--accent)] dark:text-[color:var(--accent)]">
                   {count}
                 </span>
               </div>
@@ -213,7 +247,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ tasks }) => {
           <p className="text-xs text-slate-400 py-4">No tasks completed yet.</p>
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-zinc-800/80">
-            {completed.slice(0, 5).map((t) => (
+            {recentlyCompleted.slice(0, 5).map((t) => (
               <div
                 key={t.id}
                 className="py-3 flex items-center justify-between text-xs"

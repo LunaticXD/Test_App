@@ -105,15 +105,15 @@ export const ThemeShowcase: React.FC<ThemeShowcaseProps> = ({
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-6 box-border">
       {/* Header Bar with Track Player */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#fcee0a]/20 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[color:var(--accent)]/20 gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#fcee0a] flex items-center justify-center text-black font-black shadow-md shadow-[#fcee0a]/30 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[color:var(--accent)] flex items-center justify-center text-black font-black shadow-md shadow-[color:var(--accent)]/30 shrink-0">
             <Palette className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <h3 className="text-sm sm:text-base font-black tracking-tight text-white font-mono flex items-center gap-2 truncate">
               CYBERPUNK THEME MATRIX
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#fcee0a]/20 text-[#fcee0a] border border-[#fcee0a]/40 truncate">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color:var(--accent)]/20 text-[color:var(--accent)] border border-[color:var(--accent)]/40 truncate">
                 {currentTheme.toUpperCase()}
               </span>
             </h3>
@@ -125,8 +125,8 @@ export const ThemeShowcase: React.FC<ThemeShowcaseProps> = ({
 
         {/* BGM Player Bar: Let You Down */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black border border-[#fcee0a]/40 text-xs font-mono">
-            <Disc className="w-4 h-4 text-[#fcee0a] animate-spin" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black border border-[color:var(--accent)]/40 text-xs font-mono">
+            <Disc className="w-4 h-4 text-[color:var(--accent)] animate-spin" />
             <div className="hidden sm:block text-[11px]">
               <span className="text-zinc-400 block text-[9px]">BGM OST</span>
               <span className="text-white font-bold">Let You Down</span>
@@ -140,7 +140,7 @@ export const ThemeShowcase: React.FC<ThemeShowcaseProps> = ({
             }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono border transition-all cursor-pointer ${
               !isMuted
-                ? 'bg-[#fcee0a] text-black border-[#fcee0a] shadow-md shadow-[#fcee0a]/25'
+                ? 'bg-[color:var(--accent)] text-black border-[color:var(--accent)] shadow-md shadow-[color:var(--accent)]/25'
                 : 'bg-zinc-900 text-zinc-400 border-zinc-800'
             }`}
           >
@@ -149,7 +149,7 @@ export const ThemeShowcase: React.FC<ThemeShowcaseProps> = ({
             ) : (
               <VolumeX className="w-4 h-4 text-zinc-500" />
             )}
-            <span>{isMuted ? 'UNMUTE BGM' : 'MUTED'}</span>
+            <span>{isMuted ? 'UNMUTE BGM' : 'MUTE BGM'}</span>
           </button>
         </div>
       </div>
@@ -171,7 +171,7 @@ export const ThemeShowcase: React.FC<ThemeShowcaseProps> = ({
             >
               {/* Active Indicator Banner */}
               {isActive && (
-                <div className="absolute top-0 right-0 px-3 py-0.5 bg-[#fcee0a] text-black text-[10px] font-black uppercase tracking-wider rounded-bl-xl font-mono shadow-md">
+                <div className="absolute top-0 right-0 px-3 py-0.5 bg-[color:var(--accent)] text-black text-[10px] font-black uppercase tracking-wider rounded-bl-xl font-mono shadow-md">
                   CURRENT THEME
                 </div>
               )}
@@ -204,7 +204,7 @@ export const ThemeShowcase: React.FC<ThemeShowcaseProps> = ({
                 >
                   {th.name}
                 </h4>
-                <p className="text-[10px] font-mono text-[#fcee0a] mt-0.5 font-bold">
+                <p className="text-[10px] font-mono text-[color:var(--accent)] mt-0.5 font-bold">
                   {th.tagline}
                 </p>
                 <p

@@ -1,114 +1,154 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    color-scheme: dark;
-  }
+/* Make the `dark:` variant follow the app's own `.dark` class (set by applyThemeToDOM)
+   instead of the OS-level prefers-color-scheme. Without this, every component that uses
+   `dark:` rendered in light mode on machines set to a light OS theme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ========================================================
+   THEME TOKENS
+   Every theme only has to define these variables. Components use
+   var(--accent) / var(--secondary) / var(--tertiary) / var(--bg) / var(--panel)
+   so a theme change re-colours every page, modal and widget.
+   ======================================================== */
+:root {
+  color-scheme: dark;
+  --accent: #fcee0a;
+  --accent-hover: #ffea00;
+  --accent-ink: #000000;
+  --secondary: #00f0ff;
+  --tertiary: #ff0055;
+  --bg: #070710;
+  --panel: #0e0e18;
+  --fg: #fffde6;
+  --grid: 32px;
+}
+
+/* 1. CYBERPUNK 2077 / EDGERUNNERS (default): electric yellow, cyan & hot pink */
+html.theme-cyberpunk {
+  --accent: #fcee0a;
+  --accent-hover: #ffea00;
+  --accent-ink: #000000;
+  --secondary: #00f0ff;
+  --tertiary: #ff0055;
+  --bg: #070710;
+  --panel: #0e0e18;
+  --fg: #fffde6;
+  --grid: 32px;
+}
+
+/* 2. SYNTHWAVE / NIGHT CITY SUNSET: neon magenta, cyan beams, twilight indigo */
+html.theme-synthwave {
+  --accent: #ff2d95;
+  --accent-hover: #ff5cad;
+  --accent-ink: #0b0214;
+  --secondary: #00f0ff;
+  --tertiary: #ffb000;
+  --bg: #080318;
+  --panel: #12092a;
+  --fg: #fdf2f8;
+  --grid: 36px;
+  /* Re-tint the cyan utility palette used throughout the UI */
+  --color-cyan-300: #67e8f9;
+  --color-cyan-400: #00f0ff;
+}
+
+/* 3. MATRIX CRT PHOSPHOR GREEN */
+html.theme-matrix {
+  --accent: #22c55e;
+  --accent-hover: #4ade80;
+  --accent-ink: #000000;
+  --secondary: #86efac;
+  --tertiary: #15803d;
+  --bg: #020603;
+  --panel: #04100a;
+  --fg: #4ade80;
+  --grid: 24px;
+  --color-cyan-300: #bbf7d0;
+  --color-cyan-400: #86efac;
+  --color-cyan-500: #4ade80;
+  --color-cyan-950: #052e16;
+  --color-pink-500: #16a34a;
+  --color-rose-400: #4ade80;
+}
+
+/* 4. OBSIDIAN STEALTH BLACK: ice-cyan on carbon */
+html.theme-obsidian {
+  --accent: #38bdf8;
+  --accent-hover: #7dd3fc;
+  --accent-ink: #000000;
+  --secondary: #94a3b8;
+  --tertiary: #64748b;
+  --bg: #040406;
+  --panel: #0c0c12;
+  --fg: #e2e8f0;
+  --grid: 40px;
+  --color-cyan-300: #cbd5e1;
+  --color-cyan-400: #94a3b8;
+  --color-cyan-500: #64748b;
+  --color-cyan-950: #0f172a;
+}
+
+/* 5. NEO TOKYO SOLAR (light). Every component is authored dark-first, so the light theme is
+   produced by inverting the whole document at the root element (root-level filters do not
+   break position:fixed modals). The values below are therefore "pre-inversion" colours. */
+html.theme-solar {
+  --accent: #1453db;
+  --accent-hover: #2563eb;
+  --accent-ink: #000000;
+  --secondary: #e11d48;
+  --tertiary: #0ea5e9;
+  --bg: #0a0d16;
+  --panel: #0e1220;
+  --fg: #f1f5f9;
+  --grid: 40px;
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Keep photos / artwork looking natural under the Solar inversion */
+html.theme-solar img,
+html.theme-solar video,
+html.theme-solar .no-invert {
+  filter: invert(1) hue-rotate(180deg);
 }
 
 /* ========================================================
-   1. CYBERPUNK 2077 / EDGERUNNERS (DEFAULT)
-   Based on uploaded reference images 1, 2, 6 & 7:
-   Iconic Edgerunners Yellow (#fcee0a), black circuit lines,
-   cyan (#00f0ff) and hot pink (#ff0055) neural HUD
+   PAGE BACKGROUND (shared by all themes, driven by tokens)
    ======================================================== */
-html.theme-cyberpunk,
-html.theme-cyberpunk body {
-  background-color: #070710 !important;
-  color: #fffde6;
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(252, 238, 10, 0.08) 0%, transparent 60%),
-    linear-gradient(rgba(252, 238, 10, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(252, 238, 10, 0.04) 1px, transparent 1px);
-  background-size: 100% 100%, 32px 32px, 32px 32px;
+html[class*="theme-"],
+html[class*="theme-"] body {
+  background-color: var(--bg);
+  color: var(--fg);
 }
 
-html.theme-cyberpunk .dark\:bg-zinc-950,
-html.theme-cyberpunk .dark\:bg-zinc-900,
-html.theme-cyberpunk .dark\:bg-zinc-900\/95,
-html.theme-cyberpunk .dark\:bg-zinc-900\/80 {
-  background-color: rgba(12, 12, 20, 0.94) !important;
-  border-color: rgba(252, 238, 10, 0.3) !important;
+html[class*="theme-"] body {
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent) 0%, transparent 60%),
+    linear-gradient(color-mix(in srgb, var(--accent) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--secondary) 4%, transparent) 1px, transparent 1px);
+  background-size: 100% 100%, var(--grid) var(--grid), var(--grid) var(--grid);
+  background-attachment: fixed;
 }
 
-html.theme-cyberpunk .cyber-glow-yellow {
-  box-shadow: 0 0 20px rgba(252, 238, 10, 0.4), inset 0 0 15px rgba(252, 238, 10, 0.1);
+/* Panels authored with `dark:bg-zinc-*` pick up the theme's panel colour and accent border */
+html[class*="theme-"] .dark\:bg-zinc-950,
+html[class*="theme-"] .dark\:bg-zinc-900,
+html[class*="theme-"] .dark\:bg-zinc-900\/95,
+html[class*="theme-"] .dark\:bg-zinc-900\/80,
+html[class*="theme-"] .dark\:bg-zinc-900\/60,
+html[class*="theme-"] .dark\:bg-zinc-900\/50 {
+  background-color: color-mix(in srgb, var(--panel) 94%, transparent) !important;
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent) !important;
 }
 
-html.theme-cyberpunk .cyber-glow-cyan {
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.35);
+.cyber-glow-yellow {
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 40%, transparent),
+    inset 0 0 15px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
-/* ========================================================
-   2. SYNTHWAVE SUNSET / NIGHT CITY SKYLINE
-   Based on uploaded reference images 3 & 4:
-   Night City panoramic mega-skyscrapers, sunset magenta,
-   cyan laser searchlights, and deep twilight indigo
-   ======================================================== */
-html.theme-synthwave,
-html.theme-synthwave body {
-  background-color: #080318 !important;
-  color: #fdf2f8;
-  background-image: 
-    radial-gradient(circle at 50% 10%, rgba(255, 0, 128, 0.12) 0%, transparent 65%),
-    linear-gradient(rgba(255, 0, 128, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
-  background-size: 100% 100%, 36px 36px, 36px 36px;
-}
-
-html.theme-synthwave .dark\:bg-zinc-950,
-html.theme-synthwave .dark\:bg-zinc-900,
-html.theme-synthwave .dark\:bg-zinc-900\/95,
-html.theme-synthwave .dark\:bg-zinc-900\/80 {
-  background-color: rgba(18, 9, 38, 0.94) !important;
-  border-color: rgba(255, 0, 128, 0.35) !important;
-}
-
-/* ========================================================
-   3. MATRIX CRT PHOSPHOR GREEN
-   ======================================================== */
-html.theme-matrix,
-html.theme-matrix body {
-  background-color: #020603 !important;
-  color: #4ade80;
-  background-image: 
-    linear-gradient(rgba(34, 197, 94, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 197, 94, 0.05) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-html.theme-matrix .dark\:bg-zinc-950,
-html.theme-matrix .dark\:bg-zinc-900,
-html.theme-matrix .dark\:bg-zinc-900\/95,
-html.theme-matrix .dark\:bg-zinc-900\/80 {
-  background-color: rgba(4, 16, 7, 0.96) !important;
-  border-color: rgba(34, 197, 94, 0.35) !important;
-}
-
-/* ========================================================
-   4. OBSIDIAN STEALTH BLACK
-   ======================================================== */
-html.theme-obsidian,
-html.theme-obsidian body {
-  background-color: #040406 !important;
-  color: #e2e8f0;
-}
-
-html.theme-obsidian .dark\:bg-zinc-950,
-html.theme-obsidian .dark\:bg-zinc-900,
-html.theme-obsidian .dark\:bg-zinc-900\/95,
-html.theme-obsidian .dark\:bg-zinc-900\/80 {
-  background-color: rgba(12, 12, 18, 0.95) !important;
-  border-color: rgba(56, 189, 248, 0.22) !important;
-}
-
-/* ========================================================
-   5. NEO TOKYO SOLAR LIGHT
-   ======================================================== */
-html.theme-solar,
-html.theme-solar body {
-  background-color: #f4f7fc !important;
-  color: #0f172a;
+.cyber-glow-cyan {
+  box-shadow: 0 0 15px color-mix(in srgb, var(--secondary) 35%, transparent);
 }
 
 /* Scanline animation */
@@ -123,12 +163,37 @@ html.theme-solar body {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(252, 238, 10, 0.7), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 70%, transparent), transparent);
   animation: scanline 8s linear infinite;
   pointer-events: none;
 }
 
-/* Custom Cyberpunk Scrollbars */
+/* Slow Ken-Burns drift for the Home hero artwork */
+@keyframes hero-drift {
+  0% { transform: scale(1.04) translate3d(0, 0, 0); }
+  100% { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+}
+
+.hero-drift {
+  animation: hero-drift 18s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-drift,
+  .scanline-effect {
+    animation: none;
+  }
+}
+
+/* Hide scrollbars on horizontal pill ribbons (used by the Android preview) */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom themed scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -139,11 +204,11 @@ html.theme-solar body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(252, 238, 10, 0.4);
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(252, 238, 10, 0.8);
-  box-shadow: 0 0 10px rgba(252, 238, 10, 0.6);
+  background: color-mix(in srgb, var(--accent) 80%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent);
 }

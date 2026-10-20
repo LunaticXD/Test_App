@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import {
   Sparkles,
   X,
@@ -21,6 +21,7 @@ import { Task, Priority } from '../types';
 import { categorizeTaskWithAI } from '../lib/gemini';
 import { soundFX } from '../lib/audio';
 import { triggerTaskCompletionEffect } from '../lib/celebrate';
+import { pickFolderForFile } from '../lib/routing';
 
 interface HoverSortingWindowProps {
   isOpen: boolean;
@@ -45,10 +46,12 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
   const [aiStepMessage, setAiStepMessage] = useState<string>('');
   const [lastSortedResult, setLastSortedResult] = useState<any | null>(null);
   const [recentSortedList, setRecentSortedList] = useState<any[]>([]);
+  // Only the header is a drag handle, so text inside the window can still be selected
+  const dragControls = useDragControls();
 
   if (!isOpen) return null;
 
-  const processDroppedText = async (textToProcess: string) => {
+  const processDroppedText = async (textToProcess: string, forceMode?: 'tasks' | 'files') => {
     if (!textToProcess.trim()) return;
 
     soundFX.playSweep();
@@ -58,7 +61,7 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
     const hasFileExt = /\.(pdf|png|jpg|jpeg|docx|xlsx|csv|zip|tar|ts|tsx|js|jsx|py|go|rs|md|json)$/i.test(
       textToProcess.trim()
     );
-    const mode = hasFileExt ? 'files' : activeMode;
+    const mode = forceMode ?? (hasFileExt ? 'files' : activeMode);
 
     if (mode === 'tasks') {
       setAiStepMessage('AI INFERRING PROJECT & PRIORITY FROM TASK DESCRIPTION...');
@@ -85,7 +88,7 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
           createdAt: Date.now(),
           updatedAt: Date.now(),
           estimatedMinutes: result.estimatedMinutes || 30,
-          aiReasoning: result.reasoning || 'Categorized automatically by TaskOrbit AI',
+          aiReasoning: result.reasoning || 'Categorized automatically by CyberSpace',
         };
 
         const resultItem = {
@@ -118,20 +121,8 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
       // File destination routing
       setAiStepMessage('SCANNING FILE DESTINATION MATRIX...');
       try {
-        let targetFolder = destinationFolders[0] || 'General';
-        const lower = textToProcess.toLowerCase();
-
-        if (lower.includes('invoice') || lower.includes('contract') || lower.includes('sla') || lower.includes('legal')) {
-          targetFolder = destinationFolders.find((f) => f.toLowerCase().includes('legal') || f.toLowerCase().includes('contract')) || 'Legal & Contracts';
-        } else if (lower.includes('png') || lower.includes('jpg') || lower.includes('screenshot') || lower.includes('photo') || lower.includes('banner')) {
-          targetFolder = destinationFolders.find((f) => f.toLowerCase().includes('media') || f.toLowerCase().includes('screenshot')) || 'Media & Screenshots';
-        } else if (lower.includes('ts') || lower.includes('code') || lower.includes('cluster') || lower.includes('script') || lower.includes('yml')) {
-          targetFolder = destinationFolders.find((f) => f.toLowerCase().includes('code')) || 'Code & Scripts';
-        } else if (lower.includes('csv') || lower.includes('sales') || lower.includes('data') || lower.includes('finance')) {
-          targetFolder = destinationFolders.find((f) => f.toLowerCase().includes('data') || f.toLowerCase().includes('spreadsheet')) || 'Data & Spreadsheets';
-        } else if (lower.includes('lab') || lower.includes('raft') || lower.includes('class') || lower.includes('study')) {
-          targetFolder = destinationFolders.find((f) => f.toLowerCase().includes('class') || f.toLowerCase().includes('study')) || 'Classroom / Study';
-        }
+        // Shared heuristic: matches on file kind (contract, screenshot, code...) not loose substrings
+        const targetFolder = pickFolderForFile(textToProcess, destinationFolders) ?? 'Unsorted';
 
         const resultItem = {
           id: `routed-${Date.now()}`,
@@ -163,12 +154,18 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
     e.preventDefault();
     setIsDraggingOver(false);
 
-    let text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
-    if (!text && e.dataTransfer.files.length > 0) {
-      const fileNames = Array.from(e.dataTransfer.files).map((f) => f.name).join(', ');
-      text = fileNames;
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      // Route every dropped file individually
+      (async () => {
+        for (const f of droppedFiles) {
+          await processDroppedText(f.name, 'files');
+        }
+      })();
+      return;
     }
 
+    const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
     if (text) {
       processDroppedText(text);
     }
@@ -229,51 +226,55 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
             style={{ pointerEvents: 'auto' }}
             className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full backdrop-blur-2xl border shadow-2xl cursor-grab active:cursor-grabbing transition-colors ${
               isDraggingOver
-                ? 'bg-[#fcee0a] text-black border-[#fcee0a] scale-105 shadow-[#fcee0a]/50 ring-4 ring-[#fcee0a]/40'
-                : 'bg-zinc-950/90 text-[#fcee0a] border-[#fcee0a]/40 hover:border-[#fcee0a] shadow-black/80'
+                ? 'bg-[color:var(--accent)] text-black border-[color:var(--accent)] scale-105 shadow-[color:var(--accent)]/50 ring-4 ring-[color:var(--accent)]/40'
+                : 'bg-zinc-950/90 text-[color:var(--accent)] border-[color:var(--accent)]/40 hover:border-[color:var(--accent)] shadow-black/80'
             }`}
           >
-            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#fcee0a] to-cyan-400 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[color:var(--accent)] to-cyan-400 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-black" />
             </div>
             <span className="text-xs font-black tracking-wider uppercase font-mono">
               HUD Hover Hub
             </span>
-            <span className="w-2 h-2 rounded-full bg-[#fcee0a] animate-pulse"></span>
-            <Move className="w-3.5 h-3.5 text-[#fcee0a]/80" />
+            <span className="w-2 h-2 rounded-full bg-[color:var(--accent)] animate-pulse"></span>
+            <Move className="w-3.5 h-3.5 text-[color:var(--accent)]/80" />
             <Maximize2 className="w-3.5 h-3.5 text-zinc-400 hover:text-white" />
           </motion.div>
         ) : (
           <motion.div
             key="expanded"
             drag
+            dragControls={dragControls}
+            dragListener={false}
             dragMomentum={false}
             dragElastic={0.1}
-            whileDrag={{ scale: 1.01, cursor: 'grabbing', boxShadow: '0 0 35px rgba(252, 238, 10, 0.4)' }}
+            whileDrag={{ scale: 1.01, cursor: 'grabbing', boxShadow: '0 0 35px color-mix(in srgb, var(--accent) 40%, transparent)' }}
             initial={{ scale: 0.9, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             style={{ pointerEvents: 'auto' }}
-            className="w-[360px] sm:w-[420px] rounded-3xl bg-zinc-950/95 backdrop-blur-2xl border border-[#fcee0a]/40 shadow-2xl shadow-black/90 overflow-hidden flex flex-col max-h-[85vh] relative"
+            className="w-[360px] sm:w-[420px] rounded-3xl bg-zinc-950/95 backdrop-blur-2xl border border-[color:var(--accent)]/40 shadow-2xl shadow-black/90 overflow-hidden flex flex-col max-h-[85vh] relative"
           >
             {/* Top Yellow Cyber Accent Strip */}
-            <div className="h-1 w-full bg-gradient-to-r from-[#fcee0a] via-cyan-400 to-[#ff0055] animate-pulse"></div>
+            <div className="h-1 w-full bg-gradient-to-r from-[color:var(--accent)] via-cyan-400 to-[color:var(--tertiary)] animate-pulse"></div>
 
             {/* Draggable Header */}
             <div
-              className="px-4 py-3 bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-950 border-b border-[#fcee0a]/20 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
+              onPointerDown={(e) => dragControls.start(e)}
+              style={{ touchAction: 'none' }}
+              className="px-4 py-3 bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-950 border-b border-[color:var(--accent)]/20 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
               title="Click and drag to move this window anywhere"
             >
               <div className="flex items-center gap-2">
-                <GripHorizontal className="w-4 h-4 text-[#fcee0a] animate-pulse" />
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#fcee0a] to-cyan-400 flex items-center justify-center text-black shadow-xs font-black">
+                <GripHorizontal className="w-4 h-4 text-[color:var(--accent)] animate-pulse" />
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[color:var(--accent)] to-cyan-400 flex items-center justify-center text-black shadow-xs font-black">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black text-[#fcee0a] flex items-center gap-1.5 tracking-wider uppercase font-mono">
+                  <h3 className="text-xs font-black text-[color:var(--accent)] flex items-center gap-1.5 tracking-wider uppercase font-mono">
                     HUD Sorting Window
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#fcee0a]/20 text-[#fcee0a] border border-[#fcee0a]/30">
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[color:var(--accent)]/20 text-[color:var(--accent)] border border-[color:var(--accent)]/30">
                       DRAGGABLE
                     </span>
                   </h3>
@@ -286,8 +287,9 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
                     soundFX.playBlip();
                     setIsMinimized(true);
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   title="Minimize window"
-                  className="p-1 rounded-lg text-zinc-400 hover:text-[#fcee0a] hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="p-1 rounded-lg text-zinc-400 hover:text-[color:var(--accent)] hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   <Minimize2 className="w-3.5 h-3.5" />
                 </button>
@@ -296,6 +298,7 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
                     soundFX.playBlip();
                     onClose();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   title="Close window"
                   className="p-1 rounded-lg text-zinc-400 hover:text-pink-400 hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
@@ -313,7 +316,7 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
                 }}
                 className={`flex-1 py-1 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer font-bold ${
                   activeMode === 'tasks'
-                    ? 'bg-[#fcee0a] text-black shadow-xs font-black'
+                    ? 'bg-[color:var(--accent)] text-black shadow-xs font-black'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -347,17 +350,17 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
                 onDrop={handleDrop}
                 className={`relative border-2 border-dashed rounded-2xl p-4 sm:p-5 text-center transition-all ${
                   isDraggingOver
-                    ? 'border-[#fcee0a] bg-[#fcee0a]/10 scale-[1.02] shadow-lg shadow-[#fcee0a]/20'
-                    : 'border-zinc-800 hover:border-[#fcee0a]/50 bg-zinc-900/40'
+                    ? 'border-[color:var(--accent)] bg-[color:var(--accent)]/10 scale-[1.02] shadow-lg shadow-[color:var(--accent)]/20'
+                    : 'border-zinc-800 hover:border-[color:var(--accent)]/50 bg-zinc-900/40'
                 }`}
               >
                 <div className="flex flex-col items-center justify-center gap-2">
                   <div
                     className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${
                       isDraggingOver
-                        ? 'bg-[#fcee0a] text-black animate-bounce shadow-lg shadow-[#fcee0a]/40'
+                        ? 'bg-[color:var(--accent)] text-black animate-bounce shadow-lg shadow-[color:var(--accent)]/40'
                         : activeMode === 'tasks'
-                        ? 'bg-[#fcee0a]/10 border border-[#fcee0a]/30 text-[#fcee0a]'
+                        ? 'bg-[color:var(--accent)]/10 border border-[color:var(--accent)]/30 text-[color:var(--accent)]'
                         : 'bg-cyan-950/60 border border-cyan-500/30 text-cyan-400'
                     }`}
                   >
@@ -399,12 +402,12 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
                         ? 'e.g., Fix broken auth token in backend server...'
                         : 'e.g., Q3_Report_2026.pdf...'
                     }
-                    className="flex-1 bg-zinc-900/90 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-[#fcee0a] font-mono"
+                    className="flex-1 bg-zinc-900/90 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-[color:var(--accent)] font-mono"
                   />
                   <button
                     disabled={isAnalyzing || !inputText.trim()}
                     onClick={() => processDroppedText(inputText)}
-                    className="px-3 py-1.5 bg-[#fcee0a] hover:bg-[#ffea00] text-black font-black rounded-xl text-xs flex items-center gap-1 transition-all disabled:opacity-50 cursor-pointer"
+                    className="px-3 py-1.5 bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black font-black rounded-xl text-xs flex items-center gap-1 transition-all disabled:opacity-50 cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
                   </button>
@@ -425,7 +428,7 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
                         soundFX.playBlip();
                         processDroppedText(preset);
                       }}
-                      className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-[#fcee0a]/20 text-zinc-300 hover:text-[#fcee0a] border border-zinc-800 hover:border-[#fcee0a]/40 transition-colors font-mono cursor-pointer truncate max-w-full text-left"
+                      className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-[color:var(--accent)]/20 text-zinc-300 hover:text-[color:var(--accent)] border border-zinc-800 hover:border-[color:var(--accent)]/40 transition-colors font-mono cursor-pointer truncate max-w-full text-left"
                     >
                       + {preset}
                     </button>
@@ -435,9 +438,9 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
 
               {/* Processing Spinner */}
               {isAnalyzing && (
-                <div className="p-3 rounded-xl bg-black/60 border border-[#fcee0a]/50 flex items-center gap-2.5 animate-pulse shadow-md">
-                  <div className="w-5 h-5 rounded-full border-2 border-[#fcee0a] border-t-transparent animate-spin shrink-0"></div>
-                  <p className="text-xs font-bold text-[#fcee0a] truncate font-mono">
+                <div className="p-3 rounded-xl bg-black/60 border border-[color:var(--accent)]/50 flex items-center gap-2.5 animate-pulse shadow-md">
+                  <div className="w-5 h-5 rounded-full border-2 border-[color:var(--accent)] border-t-transparent animate-spin shrink-0"></div>
+                  <p className="text-xs font-bold text-[color:var(--accent)] truncate font-mono">
                     {aiStepMessage}
                   </p>
                 </div>
@@ -448,9 +451,9 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
                 <motion.div
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="p-3 rounded-2xl bg-zinc-900/90 border border-[#fcee0a]/40 space-y-2"
+                  className="p-3 rounded-2xl bg-zinc-900/90 border border-[color:var(--accent)]/40 space-y-2"
                 >
-                  <div className="flex items-center justify-between text-[11px] font-bold text-[#fcee0a]">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-[color:var(--accent)]">
                     <span className="flex items-center gap-1.5 font-mono">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       {lastSortedResult.type === 'task' ? 'TASK INFERRED & ADDED!' : 'FILE ROUTED TO FOLDER!'}
@@ -510,7 +513,7 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
                         <span className="font-medium text-zinc-300 truncate max-w-[170px]">
                           {item.title || item.name}
                         </span>
-                        <span className="text-[10px] font-mono text-[#fcee0a]">
+                        <span className="text-[10px] font-mono text-[color:var(--accent)]">
                           {item.type === 'task' ? `[${item.priority}] ${item.project}` : `📁 ${item.destinationFolder}/`}
                         </span>
                       </div>
@@ -522,7 +525,7 @@ export const HoverSortingWindow: React.FC<HoverSortingWindowProps> = ({
 
             {/* Move Hint Footer */}
             <div className="px-4 py-2 bg-zinc-900/60 border-t border-zinc-800 flex items-center justify-between text-[11px] text-zinc-400">
-              <span className="flex items-center gap-1 text-[#fcee0a] font-mono text-[10px]">
+              <span className="flex items-center gap-1 text-[color:var(--accent)] font-mono text-[10px]">
                 <Move className="w-3 h-3" /> Drag anywhere on desktop
               </span>
               <span className="text-[10px] text-zinc-500 font-mono">CYBER HUD</span>

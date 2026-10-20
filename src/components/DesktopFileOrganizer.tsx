@@ -227,7 +227,10 @@ export const DesktopFileOrganizer: React.FC = () => {
     const instruction = customPrompt !== undefined ? customPrompt : userInstructionQuery;
 
     try {
-      const folderPaths = destinationFolders.map((f) => f.path);
+      // "My folders" / "Smart AI" route into the folders above; the other rules build their own
+      // type/date folder structure, so they must not be given the custom folder list.
+      const useCustomFolders = sortRule === 'custom_folders' || sortRule === 'smart_ai';
+      const folderPaths = useCustomFolders ? destinationFolders.map((f) => f.path) : [];
       const results = await organizeFilesWithAI(files, sortRule, folderPaths, instruction);
       setOrganizedResults(results);
       soundFX.playSuccess();
@@ -240,17 +243,33 @@ export const DesktopFileOrganizer: React.FC = () => {
 
   const handleManualReassign = (fileId: string, newDestinationPath: string) => {
     soundFX.playBlip();
-    setOrganizedResults((prev) =>
-      prev.map((item) =>
-        item.id === fileId
-          ? {
-              ...item,
-              destinationFolder: newDestinationPath,
-              reason: `Manually routed by user to "${newDestinationPath}"`,
-            }
-          : item
-      )
-    );
+    const file = files.find((f) => f.id === fileId);
+    const reason = `Manually routed by user to "${newDestinationPath}"`;
+    setOrganizedResults((prev) => {
+      const matches = (item: OrganizedFileResult) =>
+        item.id === fileId || (!!file && item.originalName === file.name);
+      if (prev.some(matches)) {
+        return prev.map((item) =>
+          matches(item) ? { ...item, destinationFolder: newDestinationPath, reason } : item
+        );
+      }
+      // Not routed yet: create the entry so the choice is not lost
+      if (!file) return prev;
+      return [
+        ...prev,
+        {
+          id: file.id,
+          originalName: file.name,
+          size: file.size,
+          lastModified: file.lastModified,
+          destinationFolder: newDestinationPath,
+          suggestedName: file.name,
+          category: 'Manual',
+          reason,
+        },
+      ];
+    });
+    setIsExecuted(false);
   };
 
   const executeMoveAction = () => {
@@ -285,11 +304,16 @@ export const DesktopFileOrganizer: React.FC = () => {
     scriptPlatform
   );
 
-  const copyScriptToClipboard = () => {
+  const copyScriptToClipboard = async () => {
     soundFX.playBlip();
-    navigator.clipboard.writeText(generatedScript);
-    setCopiedScript(true);
-    setTimeout(() => setCopiedScript(false), 2000);
+    try {
+      await navigator.clipboard.writeText(generatedScript);
+      setCopiedScript(true);
+      setTimeout(() => setCopiedScript(false), 2000);
+    } catch (err) {
+      // Clipboard can be blocked (insecure context / permissions); don't crash the view
+      console.warn('Clipboard write failed:', err);
+    }
   };
 
   // Group files by destinationFolder
@@ -310,11 +334,11 @@ export const DesktopFileOrganizer: React.FC = () => {
   const getFileIcon = (name: string) => {
     const ext = name.split('.').pop()?.toLowerCase();
     if (['png', 'jpg', 'jpeg', 'svg', 'webp'].includes(ext || ''))
-      return <ImageIcon className="w-4 h-4 text-[#00f0ff]" />;
+      return <ImageIcon className="w-4 h-4 text-[color:var(--secondary)]" />;
     if (['ts', 'tsx', 'js', 'py', 'yml', 'json', 'sh'].includes(ext || ''))
-      return <FileCode className="w-4 h-4 text-[#fcee0a]" />;
+      return <FileCode className="w-4 h-4 text-[color:var(--accent)]" />;
     if (['zip', 'tar', 'gz', 'dmg'].includes(ext || ''))
-      return <Archive className="w-4 h-4 text-[#ff0055]" />;
+      return <Archive className="w-4 h-4 text-[color:var(--tertiary)]" />;
     return <FileText className="w-4 h-4 text-purple-400" />;
   };
 
@@ -332,20 +356,20 @@ export const DesktopFileOrganizer: React.FC = () => {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="relative overflow-hidden rounded-3xl bg-[#0c0c16] text-white border-2 border-[#fcee0a]/40 shadow-2xl shadow-[#fcee0a]/15 p-4 sm:p-7 box-border"
+        className="relative overflow-hidden rounded-3xl bg-[color:var(--panel)] text-white border-2 border-[color:var(--accent)]/40 shadow-2xl shadow-[color:var(--accent)]/15 p-4 sm:p-7 box-border"
       >
         {/* Yellow & Cyan glowing accents */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#fcee0a]/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/4 w-60 h-60 bg-[#00f0ff]/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[color:var(--accent)]/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-1/4 w-60 h-60 bg-[color:var(--secondary)]/10 rounded-full blur-3xl pointer-events-none"></div>
 
         {/* Hazard top border strip */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#fcee0a] via-[#ff0055] to-[#00f0ff]"></div>
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[color:var(--accent)] via-[color:var(--tertiary)] to-[color:var(--secondary)]"></div>
 
         <div className="relative z-10 max-w-full">
           {/* Header Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-2.5">
-            <span className="px-3 py-1 rounded-full bg-[#fcee0a]/20 text-[#fcee0a] text-xs font-black font-mono flex items-center gap-1.5 border border-[#fcee0a]/40">
-              <Sparkles className="w-3.5 h-3.5 text-[#fcee0a]" />
+            <span className="px-3 py-1 rounded-full bg-[color:var(--accent)]/20 text-[color:var(--accent)] text-xs font-black font-mono flex items-center gap-1.5 border border-[color:var(--accent)]/40">
+              <Sparkles className="w-3.5 h-3.5 text-[color:var(--accent)]" />
               CYBERPUNK EDGERUNNERS ROUTER
             </span>
             <span className="text-[11px] text-zinc-400 font-mono">
@@ -354,16 +378,16 @@ export const DesktopFileOrganizer: React.FC = () => {
           </div>
 
           <h2 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight text-white font-mono leading-tight break-words">
-            DESKTOP FILE <span className="text-[#fcee0a]">ROUTING MATRIX</span>
+            DESKTOP FILE <span className="text-[color:var(--accent)]">ROUTING MATRIX</span>
           </h2>
           <p className="text-zinc-300 text-xs sm:text-sm mt-1.5 leading-relaxed max-w-2xl font-mono">
             Ask where your desktop files should go, define custom destination folders, or let AI organize everything automatically.
           </p>
 
           {/* Natural Language Prompt & Action Bar (Fully Responsive for Mobile/Android) */}
-          <div className="mt-5 flex flex-col sm:flex-row gap-2 bg-black/70 backdrop-blur-xl p-2 rounded-2xl border border-[#fcee0a]/30 shadow-lg box-border">
+          <div className="mt-5 flex flex-col sm:flex-row gap-2 bg-black/70 backdrop-blur-xl p-2 rounded-2xl border border-[color:var(--accent)]/30 shadow-lg box-border">
             <div className="flex-1 flex items-center gap-2 px-3 py-1">
-              <Sparkles className="w-4 h-4 text-[#fcee0a] shrink-0" />
+              <Sparkles className="w-4 h-4 text-[color:var(--accent)] shrink-0" />
               <input
                 type="text"
                 value={userInstructionQuery}
@@ -382,7 +406,7 @@ export const DesktopFileOrganizer: React.FC = () => {
               <button
                 disabled={isOrganizing}
                 onClick={() => runOrganization()}
-                className="flex-1 sm:flex-none px-4 py-2 bg-[#fcee0a] hover:bg-[#ffea00] active:scale-95 text-black font-black font-mono rounded-xl text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+                className="flex-1 sm:flex-none px-4 py-2 bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] active:scale-95 text-black font-black font-mono rounded-xl text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isOrganizing ? (
                   <RefreshCw className="w-4 h-4 animate-spin text-black" />
@@ -392,7 +416,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                 <span>{isOrganizing ? 'Routing...' : 'Route Files'}</span>
               </button>
 
-              <label className="flex-1 sm:flex-none cursor-pointer px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-[#fcee0a] border border-[#fcee0a]/30 font-bold font-mono rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all">
+              <label className="flex-1 sm:flex-none cursor-pointer px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-[color:var(--accent)] border border-[color:var(--accent)]/30 font-bold font-mono rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all">
                 <Upload className="w-4 h-4" />
                 <span>Upload</span>
                 <input
@@ -407,7 +431,7 @@ export const DesktopFileOrganizer: React.FC = () => {
 
           {/* Quick Routing Prompts */}
           <div className="flex flex-wrap items-center gap-1.5 mt-3">
-            <span className="text-[10px] uppercase font-bold text-[#fcee0a] font-mono mr-1">
+            <span className="text-[10px] uppercase font-bold text-[color:var(--accent)] font-mono mr-1">
               Quick Ask:
             </span>
             {quickRoutingPrompts.map((prompt, idx) => (
@@ -418,7 +442,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                   setUserInstructionQuery(prompt);
                   runOrganization(prompt);
                 }}
-                className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg bg-zinc-900/90 hover:bg-[#fcee0a]/20 text-zinc-300 hover:text-[#fcee0a] border border-zinc-750 hover:border-[#fcee0a]/50 transition-colors font-mono truncate max-w-full"
+                className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg bg-zinc-900/90 hover:bg-[color:var(--accent)]/20 text-zinc-300 hover:text-[color:var(--accent)] border border-zinc-700 hover:border-[color:var(--accent)]/50 transition-colors font-mono truncate max-w-full"
               >
                 "{prompt}"
               </button>
@@ -432,17 +456,17 @@ export const DesktopFileOrganizer: React.FC = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
-        className="bg-[#0e0e18] border border-[#fcee0a]/25 rounded-2xl p-4 sm:p-5 shadow-xs box-border overflow-hidden"
+        className="bg-[color:var(--panel)] border border-[color:var(--accent)]/25 rounded-2xl p-4 sm:p-5 shadow-xs box-border overflow-hidden"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-3 border-b border-zinc-800 gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-[#fcee0a]/20 flex items-center justify-center text-[#fcee0a] shrink-0 border border-[#fcee0a]/40">
+            <div className="w-8 h-8 rounded-lg bg-[color:var(--accent)]/20 flex items-center justify-center text-[color:var(--accent)] shrink-0 border border-[color:var(--accent)]/40">
               <FolderTree className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <h3 className="text-xs sm:text-sm font-bold text-white font-mono flex items-center gap-2 truncate">
                 Available Destination Folders
-                <span className="text-[10px] px-2 py-0.2 rounded-full bg-zinc-800 text-[#fcee0a] font-mono">
+                <span className="text-[10px] px-2 py-0.2 rounded-full bg-zinc-800 text-[color:var(--accent)] font-mono">
                   {destinationFolders.length} FOLDERS
                 </span>
               </h3>
@@ -459,7 +483,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                   soundFX.playBlip();
                   setIsAddingFolder(true);
                 }}
-                className="px-3 py-1.5 bg-[#fcee0a]/10 hover:bg-[#fcee0a]/20 text-[#fcee0a] border border-[#fcee0a]/40 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-1.5 bg-[color:var(--accent)]/10 hover:bg-[color:var(--accent)]/20 text-[color:var(--accent)] border border-[color:var(--accent)]/40 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <FolderPlus className="w-3.5 h-3.5" />
                 Add Folder
@@ -472,11 +496,11 @@ export const DesktopFileOrganizer: React.FC = () => {
                   placeholder="e.g. Projects/Edgerunners"
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
-                  className="bg-black border border-[#fcee0a] rounded-lg px-2.5 py-1 text-xs text-[#fcee0a] font-mono focus:outline-hidden w-36 sm:w-44"
+                  className="bg-black border border-[color:var(--accent)] rounded-lg px-2.5 py-1 text-xs text-[color:var(--accent)] font-mono focus:outline-hidden w-36 sm:w-44"
                 />
                 <button
                   type="submit"
-                  className="px-2.5 py-1 bg-[#fcee0a] text-black font-black rounded-lg text-xs font-mono"
+                  className="px-2.5 py-1 bg-[color:var(--accent)] text-black font-black rounded-lg text-xs font-mono"
                 >
                   Save
                 </button>
@@ -503,10 +527,10 @@ export const DesktopFileOrganizer: React.FC = () => {
               <motion.div
                 key={folder.id}
                 whileHover={{ scale: 1.02 }}
-                className="group relative p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 hover:border-[#fcee0a]/50 transition-all flex flex-col justify-between overflow-hidden"
+                className="group relative p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 hover:border-[color:var(--accent)]/50 transition-all flex flex-col justify-between overflow-hidden"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-6 h-6 rounded-md bg-[#fcee0a]/20 text-[#fcee0a] flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-md bg-[color:var(--accent)]/20 text-[color:var(--accent)] flex items-center justify-center">
                     <Folder className="w-3.5 h-3.5" />
                   </div>
                   <button
@@ -521,12 +545,12 @@ export const DesktopFileOrganizer: React.FC = () => {
                   <span className="text-[11px] font-bold text-white font-mono truncate block">
                     {folder.name}
                   </span>
-                  <span className="text-[9px] text-[#00f0ff] truncate block font-mono">
+                  <span className="text-[9px] text-[color:var(--secondary)] truncate block font-mono">
                     {folder.path}/
                   </span>
                 </div>
                 <div className="mt-1.5 pt-1 border-t border-zinc-800 flex items-center justify-between text-[9px] font-mono">
-                  <span className="text-[#fcee0a] font-bold">
+                  <span className="text-[color:var(--accent)] font-bold">
                     {fileCount} routed
                   </span>
                 </div>
@@ -537,7 +561,7 @@ export const DesktopFileOrganizer: React.FC = () => {
       </motion.div>
 
       {/* View Switcher Bar (Responsive Wrapping) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0e0e18] border border-zinc-800 rounded-2xl p-3 box-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[color:var(--panel)] border border-zinc-800 rounded-2xl p-3 box-border">
         <div className="flex flex-wrap items-center gap-1.5 bg-black/60 p-1 rounded-xl text-xs font-mono font-bold">
           <button
             onClick={() => {
@@ -546,7 +570,7 @@ export const DesktopFileOrganizer: React.FC = () => {
             }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all text-xs ${
               viewTab === 'matrix'
-                ? 'bg-[#fcee0a] text-black font-black shadow-xs'
+                ? 'bg-[color:var(--accent)] text-black font-black shadow-xs'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -560,7 +584,7 @@ export const DesktopFileOrganizer: React.FC = () => {
             }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all text-xs ${
               viewTab === 'buckets'
-                ? 'bg-[#fcee0a] text-black font-black shadow-xs'
+                ? 'bg-[color:var(--accent)] text-black font-black shadow-xs'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -574,7 +598,7 @@ export const DesktopFileOrganizer: React.FC = () => {
             }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all text-xs ${
               viewTab === 'script'
-                ? 'bg-[#fcee0a] text-black font-black shadow-xs'
+                ? 'bg-[color:var(--accent)] text-black font-black shadow-xs'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -585,12 +609,29 @@ export const DesktopFileOrganizer: React.FC = () => {
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={sortRule}
+            onChange={(e) => {
+              soundFX.playBlip();
+              setSortRule(e.target.value as FileSortRule);
+              setIsExecuted(false);
+            }}
+            title="How files are routed when you press Route Files"
+            className="bg-black border border-zinc-700 hover:border-[color:var(--accent)]/50 rounded-lg px-2 py-1.5 text-[11px] text-zinc-300 font-mono focus:outline-hidden cursor-pointer"
+          >
+            <option value="custom_folders">Rule: My folders</option>
+            <option value="smart_ai">Rule: Smart AI</option>
+            <option value="type_and_date">Rule: Type + date</option>
+            <option value="type">Rule: Type</option>
+            <option value="date">Rule: Date</option>
+          </select>
+
           {organizedResults.length > 0 && !isExecuted && (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={executeMoveAction}
-              className="px-3.5 py-1.5 bg-[#fcee0a] hover:bg-[#ffea00] text-black rounded-xl text-xs font-black font-mono flex items-center gap-1.5 shadow-md shadow-[#fcee0a]/25 cursor-pointer"
+              className="px-3.5 py-1.5 bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black rounded-xl text-xs font-black font-mono flex items-center gap-1.5 shadow-md shadow-[color:var(--accent)]/25 cursor-pointer"
             >
               <FolderCheck className="w-3.5 h-3.5" />
               Apply Organization ({organizedResults.length})
@@ -608,7 +649,7 @@ export const DesktopFileOrganizer: React.FC = () => {
             <button
               disabled={isDownloadingZip}
               onClick={handleDownloadZip}
-              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-[#00f0ff] border border-[#00f0ff]/30 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-[color:var(--secondary)] border border-[color:var(--secondary)]/30 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               {isDownloadingZip ? (
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -627,7 +668,7 @@ export const DesktopFileOrganizer: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
-          className="bg-[#0e0e18] border border-zinc-800 rounded-2xl p-4 sm:p-5 box-border overflow-hidden space-y-3"
+          className="bg-[color:var(--panel)] border border-zinc-800 rounded-2xl p-4 sm:p-5 box-border overflow-hidden space-y-3"
         >
           <div className="flex items-center justify-between pb-2.5 border-b border-zinc-800">
             <div>
@@ -638,7 +679,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                 Change any destination dropdown to reassign where each file is moved
               </p>
             </div>
-            <span className="text-[11px] text-[#fcee0a] font-mono">
+            <span className="text-[11px] text-[color:var(--accent)] font-mono">
               {files.length} Files
             </span>
           </div>
@@ -668,7 +709,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                         <span>•</span>
                         <span>{new Date(file.lastModified).toLocaleDateString()}</span>
                         {routingInfo?.reason && (
-                          <span className="text-[#fcee0a] italic truncate max-w-[140px] sm:max-w-xs hidden sm:inline">
+                          <span className="text-[color:var(--accent)] italic truncate max-w-[140px] sm:max-w-xs hidden sm:inline">
                             • {routingInfo.reason}
                           </span>
                         )}
@@ -683,7 +724,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                       <select
                         value={currentDest}
                         onChange={(e) => handleManualReassign(file.id, e.target.value)}
-                        className="bg-black border border-[#fcee0a]/40 text-[#fcee0a] font-bold font-mono rounded-lg px-2 py-1 text-[11px] focus:outline-hidden max-w-[180px] sm:max-w-[200px] truncate"
+                        className="bg-black border border-[color:var(--accent)]/40 text-[color:var(--accent)] font-bold font-mono rounded-lg px-2 py-1 text-[11px] focus:outline-hidden max-w-[180px] sm:max-w-[200px] truncate"
                       >
                         <option value={currentDest} disabled>
                           📁 {currentDest}
@@ -710,7 +751,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                           reason: 'Recommended based on filename and extension match.',
                         });
                       }}
-                      className="p-1 rounded-lg text-zinc-500 hover:text-[#fcee0a]"
+                      className="p-1 rounded-lg text-zinc-500 hover:text-[color:var(--accent)]"
                       title="Why this destination?"
                     >
                       <HelpCircle className="w-4 h-4" />
@@ -732,7 +773,7 @@ export const DesktopFileOrganizer: React.FC = () => {
           className="space-y-4"
         >
           {Object.keys(folderGroups).length === 0 ? (
-            <div className="bg-[#0e0e18] border border-zinc-800 rounded-2xl p-8 sm:p-12 text-center font-mono">
+            <div className="bg-[color:var(--panel)] border border-zinc-800 rounded-2xl p-8 sm:p-12 text-center font-mono">
               <FolderSync className="w-10 h-10 mx-auto text-zinc-600 mb-2" />
               <h3 className="text-sm font-bold text-white">
                 No Folder Buckets Generated Yet
@@ -742,7 +783,7 @@ export const DesktopFileOrganizer: React.FC = () => {
               </p>
               <button
                 onClick={() => runOrganization()}
-                className="mt-3 px-4 py-2 bg-[#fcee0a] text-black font-black rounded-xl text-xs"
+                className="mt-3 px-4 py-2 bg-[color:var(--accent)] text-black font-black rounded-xl text-xs"
               >
                 Run AI Auto-Routing
               </button>
@@ -753,17 +794,17 @@ export const DesktopFileOrganizer: React.FC = () => {
                 <motion.div
                   key={folderPath}
                   layout
-                  className="bg-[#0e0e18] border border-zinc-800 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden"
+                  className="bg-[color:var(--panel)] border border-zinc-800 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden"
                 >
                   <div>
                     <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <Folder className="w-4 h-4 text-[#fcee0a] shrink-0" />
+                        <Folder className="w-4 h-4 text-[color:var(--accent)] shrink-0" />
                         <h4 className="font-bold text-xs text-white font-mono truncate">
                           {folderPath}/
                         </h4>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#fcee0a]/20 text-[#fcee0a] font-mono shrink-0">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[color:var(--accent)]/20 text-[color:var(--accent)] font-mono shrink-0">
                         {groupFiles.length} files
                       </span>
                     </div>
@@ -790,7 +831,7 @@ export const DesktopFileOrganizer: React.FC = () => {
 
                   <div className="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between text-[10px] text-zinc-400 font-mono">
                     <span>Target Folder</span>
-                    <span className="font-bold text-[#fcee0a]">
+                    <span className="font-bold text-[color:var(--accent)]">
                       {formatBytes(groupFiles.reduce((acc, f) => acc + f.size, 0))}
                     </span>
                   </div>
@@ -807,11 +848,11 @@ export const DesktopFileOrganizer: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
-          className="bg-black text-white rounded-3xl p-4 sm:p-7 border border-[#fcee0a]/40 shadow-2xl space-y-3 box-border overflow-hidden"
+          className="bg-black text-white rounded-3xl p-4 sm:p-7 border border-[color:var(--accent)]/40 shadow-2xl space-y-3 box-border overflow-hidden"
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#fcee0a]/20 text-[#fcee0a] flex items-center justify-center font-black">
+              <div className="w-8 h-8 rounded-xl bg-[color:var(--accent)]/20 text-[color:var(--accent)] flex items-center justify-center font-black">
                 <Terminal className="w-4 h-4" />
               </div>
               <div>
@@ -833,7 +874,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                   }}
                   className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
                     scriptPlatform === 'mac_linux'
-                      ? 'bg-[#fcee0a] text-black font-black'
+                      ? 'bg-[color:var(--accent)] text-black font-black'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -846,7 +887,7 @@ export const DesktopFileOrganizer: React.FC = () => {
                   }}
                   className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
                     scriptPlatform === 'windows'
-                      ? 'bg-[#fcee0a] text-black font-black'
+                      ? 'bg-[color:var(--accent)] text-black font-black'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -856,7 +897,7 @@ export const DesktopFileOrganizer: React.FC = () => {
 
               <button
                 onClick={copyScriptToClipboard}
-                className="px-3 py-1.5 bg-[#fcee0a] hover:bg-[#ffea00] text-black font-black font-mono rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-1.5 bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black font-black font-mono rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 {copiedScript ? (
                   <Check className="w-3.5 h-3.5 text-black" />
@@ -868,7 +909,7 @@ export const DesktopFileOrganizer: React.FC = () => {
             </div>
           </div>
 
-          <pre className="p-3 sm:p-4 rounded-2xl bg-zinc-950 font-mono text-[11px] text-[#fcee0a] border border-zinc-800 overflow-x-auto max-h-52 break-all sm:break-normal whitespace-pre-wrap">
+          <pre className="p-3 sm:p-4 rounded-2xl bg-zinc-950 font-mono text-[11px] text-[color:var(--accent)] border border-zinc-800 overflow-x-auto max-h-52 break-all sm:break-normal whitespace-pre-wrap">
             {generatedScript}
           </pre>
         </motion.div>
@@ -882,11 +923,11 @@ export const DesktopFileOrganizer: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#0e0e18] border border-[#fcee0a]/50 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-3 font-mono"
+              className="bg-[color:var(--panel)] border border-[color:var(--accent)]/50 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-3 font-mono"
             >
               <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#fcee0a]" />
+                  <Sparkles className="w-4 h-4 text-[color:var(--accent)]" />
                   <h4 className="font-bold text-xs sm:text-sm text-white">
                     AI ROUTING REASONING
                   </h4>
@@ -908,14 +949,14 @@ export const DesktopFileOrganizer: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-zinc-400 text-[10px]">TARGET DESTINATION:</span>
-                  <p className="font-bold text-[#fcee0a] mt-0.5 flex items-center gap-1">
+                  <p className="font-bold text-[color:var(--accent)] mt-0.5 flex items-center gap-1">
                     <Folder className="w-3.5 h-3.5" />
                     {activeExplainFile.destinationFolder}/
                   </p>
                 </div>
                 <div>
                   <span className="text-zinc-400 text-[10px]">REASONING:</span>
-                  <p className="text-zinc-300 mt-0.5 p-2.5 rounded-xl bg-zinc-900 border border-zinc-850 leading-relaxed italic text-[11px]">
+                  <p className="text-zinc-300 mt-0.5 p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 leading-relaxed italic text-[11px]">
                     "{activeExplainFile.reason}"
                   </p>
                 </div>
@@ -924,7 +965,7 @@ export const DesktopFileOrganizer: React.FC = () => {
               <div className="pt-2 flex justify-end">
                 <button
                   onClick={() => setActiveExplainFile(null)}
-                  className="px-4 py-1.5 bg-[#fcee0a] text-black font-black text-xs rounded-xl"
+                  className="px-4 py-1.5 bg-[color:var(--accent)] text-black font-black text-xs rounded-xl"
                 >
                   ACKNOWLEDGE
                 </button>

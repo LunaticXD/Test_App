@@ -81,14 +81,18 @@ export const ThemeSyncModal: React.FC<ThemeSyncModalProps> = ({
       themeSetting: isDark
         ? `Classroom UI: Dark Mode Enabled (System color-scheme: dark active)`
         : `Classroom UI: Light Mode Enabled (Standard Classroom theme)`,
-      instructions: 'Inherits system-wide prefers-color-scheme from TaskOrbit',
+      instructions: 'Inherits system-wide prefers-color-scheme from CyberSpace',
     },
   ];
 
-  const copyConfig = (id: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedApp(id);
-    setTimeout(() => setCopiedApp(null), 2000);
+  const copyConfig = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedApp(id);
+      setTimeout(() => setCopiedApp(null), 2000);
+    } catch (err) {
+      console.warn('Clipboard write failed:', err);
+    }
   };
 
   const handleSyncAll = () => {
@@ -102,7 +106,7 @@ export const ThemeSyncModal: React.FC<ThemeSyncModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-zinc-800">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md">
+            <div className="w-9 h-9 rounded-xl bg-[color:var(--accent)] flex items-center justify-center text-[color:var(--accent-ink)] shadow-md">
               <Moon className="w-5 h-5" />
             </div>
             <div>
@@ -110,7 +114,7 @@ export const ThemeSyncModal: React.FC<ThemeSyncModalProps> = ({
                 System-Wide Dark Mode & App Theme Engine
               </h3>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Synchronize appearance across TaskOrbit, Desktop OS, and connected apps
+                Synchronize appearance across CyberSpace, Desktop OS, and connected apps
               </p>
             </div>
           </div>
@@ -229,7 +233,7 @@ export const ThemeSyncModal: React.FC<ThemeSyncModalProps> = ({
 
             <button
               onClick={handleSyncAll}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+              className="px-3 py-1.5 bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-[color:var(--accent-ink)] rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
             >
               {syncedAll ? (
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
@@ -244,7 +248,7 @@ export const ThemeSyncModal: React.FC<ThemeSyncModalProps> = ({
             {appSyncConfigs.map((app) => (
               <div
                 key={app.id}
-                className="border border-slate-200 dark:border-zinc-800 rounded-xl p-3 bg-slate-50/70 dark:bg-zinc-850/50"
+                className="border border-slate-200 dark:border-zinc-800 rounded-xl p-3 bg-slate-50/70 dark:bg-zinc-800/50"
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
@@ -270,7 +274,7 @@ export const ThemeSyncModal: React.FC<ThemeSyncModalProps> = ({
                   </button>
                 </div>
 
-                <pre className="p-2 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-x-auto max-h-20 selection:bg-indigo-900">
+                <pre className="p-2 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-x-auto max-h-20 selection:bg-[color:var(--accent)]/10">
                   {app.themeSetting}
                 </pre>
                 <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1">
