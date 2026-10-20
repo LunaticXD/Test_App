@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
+import { pickFolderForFile } from './src/lib/routing';
 
 dotenv.config();
 
@@ -173,13 +174,9 @@ app.post('/api/organize-files', async (req, res) => {
 
       let destinationFolder = '';
       if (customFolders && customFolders.length > 0) {
-        // Match closest custom folder
-        const lowerName = file.name.toLowerCase();
-        const matched = customFolders.find((cf: string) => {
-          const lcf = cf.toLowerCase();
-          return lowerName.includes(lcf) || typeCategory.toLowerCase().includes(lcf);
-        });
-        destinationFolder = matched || customFolders[0];
+        // Match the file's kind (contract, screenshot, code...) to the closest custom folder.
+        // Files that fit no folder stay "Unsorted" instead of all piling into the first folder.
+        destinationFolder = pickFolderForFile(file.name, customFolders) ?? 'Unsorted';
       } else if (mode === 'type_and_date') {
         destinationFolder = `${typeCategory}/${monthYear}`;
       } else if (mode === 'type') {

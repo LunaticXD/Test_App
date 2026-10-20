@@ -45,6 +45,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isEditing = !!task && task.title.trim() !== '';
+  const projectOptions =
+    project && project !== '__new__' && !existingProjects.includes(project)
+      ? [...existingProjects, project]
+      : existingProjects;
+
   const handleAddSubtask = () => {
     if (!newSubtaskTitle.trim()) return;
     setSubtasks([
@@ -113,7 +119,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     e.preventDefault();
     if (!title.trim()) return;
 
-    const finalProject = customProject.trim() || project;
+    const finalProject =
+      project === '__new__' ? customProject.trim() || existingProjects[0] || 'General' : project;
 
     const savedTask: Task = {
       id: task?.id || `task-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -144,7 +151,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              {task ? 'Edit Task' : 'Create New Task'}
+              {isEditing ? 'Edit Task' : 'Create New Task'}
             </h3>
           </div>
           <button
@@ -166,7 +173,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 type="button"
                 disabled={isRefiningAI || (!title && !description)}
                 onClick={handleRefineWithAI}
-                className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1 disabled:opacity-50"
+                className="text-[11px] font-semibold text-[color:var(--accent)] dark:text-[color:var(--accent)] hover:text-[color:var(--accent)] flex items-center gap-1 disabled:opacity-50"
               >
                 {isRefiningAI ? (
                   <RefreshCw className="w-3 h-3 animate-spin" />
@@ -182,7 +189,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Fix WebSocket heartbeat timeout in production"
-              className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[color:var(--accent)]"
             />
           </div>
 
@@ -196,7 +203,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add key context, links, or criteria..."
-              className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[color:var(--accent)]"
             />
           </div>
 
@@ -209,7 +216,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
-                className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[color:var(--accent)]"
               >
                 <option value="Urgent">🔥 Urgent (Critical)</option>
                 <option value="High">⚡ High</option>
@@ -225,7 +232,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[color:var(--accent)]"
               >
                 <option value="todo">📋 To Do</option>
                 <option value="in_progress">⏳ In Progress</option>
@@ -246,9 +253,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   setProject(e.target.value);
                   if (e.target.value !== '__new__') setCustomProject('');
                 }}
-                className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[color:var(--accent)]"
               >
-                {existingProjects.map((p) => (
+                {projectOptions.map((p) => (
                   <option key={p} value={p}>
                     {p}
                   </option>
@@ -274,7 +281,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[color:var(--accent)]"
               />
             </div>
           </div>
@@ -295,7 +302,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                       type="checkbox"
                       checked={st.completed}
                       onChange={() => handleToggleSubtask(st.id)}
-                      className="rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      className="rounded-sm border-slate-300 text-[color:var(--accent)] focus:ring-[color:var(--accent)]"
                     />
                     <span
                       className={`truncate ${
@@ -349,7 +356,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               {tags.map((t) => (
                 <span
                   key={t}
-                  className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-medium border border-indigo-200 dark:border-indigo-800 flex items-center gap-1"
+                  className="px-2 py-0.5 rounded-md bg-[color:var(--accent)]/10 dark:bg-[color:var(--accent)]/10 text-[color:var(--accent)] dark:text-[color:var(--accent)] text-xs font-medium border border-[color:var(--accent)]/40 dark:border-[color:var(--accent)]/40 flex items-center gap-1"
                 >
                   #{t}
                   <button
@@ -398,9 +405,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-all"
+              className="px-5 py-2 text-xs font-bold bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-[color:var(--accent-ink)] rounded-xl shadow-sm transition-all"
             >
-              {task ? 'Save Changes' : 'Create Task'}
+              {isEditing ? 'Save Changes' : 'Create Task'}
             </button>
           </div>
         </form>

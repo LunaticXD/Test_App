@@ -18,10 +18,13 @@ import {
   LayoutGrid,
   TrendingUp,
   Radio,
+  Home as HomeIcon,
+  Search,
 } from 'lucide-react';
 import { SyncState, ThemeMode } from '../types';
 import { soundFX } from '../lib/audio';
 import { ActiveFeature } from './Sidebar';
+import { THEME_LABELS, nextTheme } from '../lib/theme';
 
 interface NavbarProps {
   syncState: SyncState;
@@ -41,6 +44,7 @@ interface NavbarProps {
   onOpenNewTaskModal: () => void;
   onToggleMobileSidebar: () => void;
   onOpenMusicPlayer?: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -61,9 +65,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenNewTaskModal,
   onToggleMobileSidebar,
   onOpenMusicPlayer,
+  onOpenCommandPalette,
 }) => {
   const getFeatureTitle = () => {
     switch (activeFeature) {
+      case 'home':
+        return 'Home';
       case 'tasks':
         return 'Tasks Tracker';
       case 'kanban':
@@ -84,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-20 border-b border-[#fcee0a]/20 bg-[#070710]/90 backdrop-blur-2xl transition-colors">
+    <header className="sticky top-0 z-20 border-b border-[color:var(--accent)]/20 bg-[color:var(--bg)]/90 backdrop-blur-2xl transition-colors">
       <div className="w-full px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
         {/* Left: Mobile Menu Toggle & Title */}
         <div className="flex items-center gap-2.5 sm:gap-3">
@@ -94,16 +101,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               soundFX.playBlip();
               onToggleMobileSidebar();
             }}
-            className="md:hidden p-2 rounded-xl text-zinc-300 hover:text-[#fcee0a] bg-zinc-900 border border-zinc-800 cursor-pointer"
+            className="md:hidden p-2 rounded-xl text-zinc-300 hover:text-[color:var(--accent)] bg-zinc-900 border border-zinc-800 cursor-pointer"
             title="Toggle Sidebar"
           >
             <Menu className="w-4 h-4" />
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="font-black text-white tracking-tight text-sm sm:text-base font-mono">
-              Cyber<span className="text-[#fcee0a]">Space</span>
-            </span>
+            <button
+              onClick={() => {
+                soundFX.playBlip();
+                onSelectFeature('home');
+              }}
+              title="Go to Home"
+              className="font-black text-white tracking-tight text-sm sm:text-base font-mono cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              Cyber<span className="text-[color:var(--accent)]">Space</span>
+            </button>
             <span className="hidden sm:inline-block text-zinc-600 font-mono">/</span>
             <span className="hidden sm:inline-block text-xs font-mono font-bold text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded-md border border-cyan-500/30">
               {getFeatureTitle()}
@@ -113,13 +127,44 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Action Toolbar */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Home */}
+          <button
+            onClick={() => {
+              soundFX.playBlip();
+              onSelectFeature('home');
+            }}
+            title="Home"
+            className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+              activeFeature === 'home'
+                ? 'text-black bg-[color:var(--accent)] border-[color:var(--accent)]'
+                : 'text-zinc-300 hover:text-[color:var(--accent)] bg-zinc-900 border-zinc-800 hover:border-[color:var(--accent)]/40'
+            }`}
+          >
+            <HomeIcon className="w-4 h-4" />
+          </button>
+
+          {/* Command palette */}
+          {onOpenCommandPalette && (
+            <button
+              onClick={() => {
+                soundFX.playBlip();
+                onOpenCommandPalette();
+              }}
+              title="Search & commands (Ctrl/Cmd + K)"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-mono text-zinc-300 hover:text-[color:var(--accent)] bg-zinc-900 border border-zinc-800 hover:border-[color:var(--accent)]/40 transition-colors cursor-pointer"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span className="text-[10px] text-zinc-500">Ctrl K</span>
+            </button>
+          )}
+
           {/* Quick New Task Button */}
           <button
             onClick={() => {
               soundFX.playBlip();
               onOpenNewTaskModal();
             }}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#fcee0a] hover:bg-[#ffea00] text-black text-xs font-mono font-black border border-black shadow-sm cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black text-xs font-mono font-black border border-black shadow-sm cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
             <span>New Task</span>
@@ -134,8 +179,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             title={isHoverWindowOpen ? 'Close Hover Sorting Window' : 'Open Hover Sorting Window (H)'}
             className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-mono font-bold border flex items-center gap-1.5 transition-all cursor-pointer ${
               isHoverWindowOpen
-                ? 'bg-[#fcee0a] text-black border-[#fcee0a] shadow-xs'
-                : 'text-zinc-300 bg-zinc-900 border-zinc-800 hover:border-[#fcee0a]/50'
+                ? 'bg-[color:var(--accent)] text-black border-[color:var(--accent)] shadow-xs'
+                : 'text-zinc-300 bg-zinc-900 border-zinc-800 hover:border-[color:var(--accent)]/50'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -149,12 +194,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               onToggleViewMode();
             }}
             title={viewMode === 'desktop' ? 'Switch to Android Mobile View' : 'Switch to Desktop View'}
-            className="p-2 rounded-xl text-zinc-300 hover:text-[#fcee0a] bg-zinc-900 border border-zinc-800 hover:border-[#fcee0a]/40 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-zinc-300 hover:text-[color:var(--accent)] bg-zinc-900 border border-zinc-800 hover:border-[color:var(--accent)]/40 transition-colors cursor-pointer"
           >
             {viewMode === 'desktop' ? (
               <Smartphone className="w-4 h-4 text-cyan-400" />
             ) : (
-              <Laptop className="w-4 h-4 text-[#fcee0a]" />
+              <Laptop className="w-4 h-4 text-[color:var(--accent)]" />
             )}
           </button>
 
@@ -163,7 +208,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onManualSync}
             disabled={syncState.isSyncing}
             title={syncState.isOnline ? 'Online: Click to sync with Cloud Vault' : 'Offline: Changes stored locally'}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold text-zinc-300 bg-zinc-900 border border-zinc-800 hover:border-[#fcee0a]/40 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold text-zinc-300 bg-zinc-900 border border-zinc-800 hover:border-[color:var(--accent)]/40 transition-colors cursor-pointer"
           >
             {syncState.isOnline ? (
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -171,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="w-2 h-2 rounded-full bg-amber-400"></span>
             )}
             <RefreshCw
-              className={`w-3.5 h-3.5 ${syncState.isSyncing ? 'animate-spin text-[#fcee0a]' : 'text-zinc-400'}`}
+              className={`w-3.5 h-3.5 ${syncState.isSyncing ? 'animate-spin text-[color:var(--accent)]' : 'text-zinc-400'}`}
             />
           </button>
 
@@ -181,8 +226,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               soundFX.playBlip();
               onToggleTheme();
             }}
-            title="Toggle Cyberpunk / Synthwave Theme"
-            className="p-2 rounded-xl text-zinc-300 hover:text-[#fcee0a] bg-zinc-900 border border-zinc-800 hover:border-[#fcee0a]/40 transition-colors cursor-pointer"
+            title={`Theme: ${THEME_LABELS[theme]} (click for ${THEME_LABELS[nextTheme(theme)]})`}
+            className="p-2 rounded-xl text-zinc-300 hover:text-[color:var(--accent)] bg-zinc-900 border border-zinc-800 hover:border-[color:var(--accent)]/40 transition-colors cursor-pointer"
           >
             <Palette className="w-4 h-4" />
           </button>
@@ -197,7 +242,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Cyber Soundtrack Station (Switch / Upload Audio)"
               className="p-2 rounded-xl text-zinc-300 hover:text-cyan-300 bg-zinc-900 border border-zinc-800 hover:border-cyan-400/40 transition-colors cursor-pointer"
             >
-              <Radio className="w-4 h-4 text-[#fcee0a] animate-pulse" />
+              <Radio className="w-4 h-4 text-[color:var(--accent)] animate-pulse" />
             </button>
           )}
 
@@ -205,12 +250,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onToggleMute}
             title={isMuted ? 'Unmute Sound Effects & BGM' : 'Mute Audio'}
-            className="p-2 rounded-xl text-zinc-300 hover:text-[#fcee0a] bg-zinc-900 border border-zinc-800 hover:border-[#fcee0a]/40 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-zinc-300 hover:text-[color:var(--accent)] bg-zinc-900 border border-zinc-800 hover:border-[color:var(--accent)]/40 transition-colors cursor-pointer"
           >
             {isMuted ? (
               <VolumeX className="w-4 h-4 text-zinc-500" />
             ) : (
-              <Volume2 className="w-4 h-4 text-[#fcee0a] animate-pulse" />
+              <Volume2 className="w-4 h-4 text-[color:var(--accent)] animate-pulse" />
             )}
           </button>
         </div>

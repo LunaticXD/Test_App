@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { DesktopFile, FileSortRule, OrganizedFileResult, Priority } from '../types';
+import { pickFolderForFile } from './routing';
 
 export interface CategorizedTaskResult {
   title: string;
@@ -137,12 +138,7 @@ function localOrganizeFallback(
 
     let destinationFolder = '';
     if (customFolders && customFolders.length > 0) {
-      const lowerName = file.name.toLowerCase();
-      const matched = customFolders.find((cf) => {
-        const lcf = cf.toLowerCase();
-        return lowerName.includes(lcf) || category.toLowerCase().includes(lcf);
-      });
-      destinationFolder = matched || customFolders[0];
+      destinationFolder = pickFolderForFile(file.name, customFolders) ?? 'Unsorted';
     } else if (mode === 'type_and_date') {
       destinationFolder = `${category}/${monthYear}`;
     } else if (mode === 'type') {

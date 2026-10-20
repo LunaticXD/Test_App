@@ -22,11 +22,13 @@ import {
   Radio,
   RotateCcw,
   Zap,
+  Home as HomeIcon,
 } from 'lucide-react';
 import { SyncState, ThemeMode } from '../types';
 import { soundFX } from '../lib/audio';
 
 export type ActiveFeature =
+  | 'home'
   | 'tasks'
   | 'kanban'
   | 'analytics'
@@ -91,11 +93,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     desc: string;
   }[] = [
     {
+      id: 'home',
+      label: 'Home',
+      icon: HomeIcon,
+      desc: 'Welcome hub & quick launch',
+    },
+    {
       id: 'tasks',
       label: 'Tasks Tracker',
       icon: CheckSquare,
       badge: tasksCount.todo,
-      badgeColor: 'bg-[#fcee0a] text-black font-black',
+      badgeColor: 'bg-[color:var(--accent)] text-black font-black',
       desc: 'All tasks, AI breakdown & filters',
     },
     {
@@ -135,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Connected Apps',
       icon: Layers,
       badge: connectedAppsCount,
-      badgeColor: 'bg-[#fcee0a] text-black font-black',
+      badgeColor: 'bg-[color:var(--accent)] text-black font-black',
       desc: 'VS Code, Claude, Git, Gmail, Class',
     },
     {
@@ -156,23 +164,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`shrink-0 transition-all duration-300 ease-in-out border-r border-[#fcee0a]/20 bg-[#070710]/95 backdrop-blur-2xl flex flex-col justify-between z-30 select-none ${
+      className={`shrink-0 transition-all duration-300 ease-in-out border-r border-[color:var(--accent)]/20 bg-[color:var(--bg)]/95 backdrop-blur-2xl flex flex-col justify-between z-30 select-none ${
         isCollapsed ? 'w-20' : 'w-64 sm:w-72'
       }`}
     >
       {/* Top Brand & Header */}
-      <div className="p-3 border-b border-[#fcee0a]/20">
+      <div className="p-3 border-b border-[color:var(--accent)]/20">
         <div className="flex items-center justify-between gap-2">
           <div
             onClick={() => {
               soundFX.playBlip();
-              onSelectFeature('tasks');
+              onSelectFeature('home');
             }}
+            title="Go to Home"
             className="flex items-center gap-2.5 cursor-pointer overflow-hidden"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#fcee0a] via-cyan-400 to-[#ff0055] p-0.5 shrink-0 shadow-lg shadow-[#fcee0a]/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[color:var(--accent)] via-cyan-400 to-[color:var(--tertiary)] p-0.5 shrink-0 shadow-lg shadow-[color:var(--accent)]/20 flex items-center justify-center">
               <div className="w-full h-full rounded-[10px] bg-black flex items-center justify-center">
-                <Zap className="w-5 h-5 text-[#fcee0a] animate-pulse" />
+                <Zap className="w-5 h-5 text-[color:var(--accent)] animate-pulse" />
               </div>
             </div>
 
@@ -180,9 +189,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="truncate">
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono font-black text-sm text-white tracking-wider uppercase">
-                    TASK<span className="text-[#fcee0a]">ORBIT</span>
+                    CYBER<span className="text-[color:var(--accent)]">SPACE</span>
                   </span>
-                  <span className="text-[9px] font-black font-mono px-1.5 py-0.2 rounded-sm bg-[#fcee0a]/20 text-[#fcee0a] border border-[#fcee0a]/40">
+                  <span className="text-[9px] font-black font-mono px-1.5 py-0.2 rounded-sm bg-[color:var(--accent)]/20 text-[color:var(--accent)] border border-[color:var(--accent)]/40">
                     2077
                   </span>
                 </div>
@@ -200,7 +209,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onToggleCollapse();
             }}
             title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-[#fcee0a] bg-zinc-900 border border-zinc-800 hover:border-[#fcee0a]/40 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-[color:var(--accent)] bg-zinc-900 border border-zinc-800 hover:border-[color:var(--accent)]/40 transition-colors cursor-pointer"
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
@@ -214,7 +223,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onOpenNewTaskModal();
             }}
             title="Create New Task"
-            className={`w-full py-2.5 rounded-xl bg-[#fcee0a] hover:bg-[#ffea00] text-black font-black font-mono text-xs tracking-wider uppercase shadow-md shadow-[#fcee0a]/25 flex items-center justify-center gap-2 transition-all cursor-pointer border border-black ${
+            className={`w-full py-2.5 rounded-xl bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black font-black font-mono text-xs tracking-wider uppercase shadow-md shadow-[color:var(--accent)]/25 flex items-center justify-center gap-2 transition-all cursor-pointer border border-black ${
               isCollapsed ? 'px-0' : 'px-3'
             }`}
           >
@@ -246,18 +255,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
               title={item.label}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-mono text-xs font-bold transition-all relative group cursor-pointer ${
                 isActive
-                  ? 'bg-gradient-to-r from-[#fcee0a]/20 via-cyan-500/10 to-transparent text-[#fcee0a] border border-[#fcee0a]/50 shadow-sm shadow-[#fcee0a]/20'
+                  ? 'bg-gradient-to-r from-[color:var(--accent)]/20 via-cyan-500/10 to-transparent text-[color:var(--accent)] border border-[color:var(--accent)]/50 shadow-sm shadow-[color:var(--accent)]/20'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-900/80 border border-transparent hover:border-zinc-800'
               }`}
             >
               {/* Active Neon Left Pip */}
               {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#fcee0a] rounded-r-full shadow-md shadow-[#fcee0a]/80"></span>
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[color:var(--accent)] rounded-r-full shadow-md shadow-[color:var(--accent)]/80"></span>
               )}
 
               <Icon
                 className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
-                  isActive ? 'text-[#fcee0a]' : 'text-zinc-400 group-hover:text-cyan-400'
+                  isActive ? 'text-[color:var(--accent)]' : 'text-zinc-400 group-hover:text-cyan-400'
                 }`}
               />
 
@@ -312,7 +321,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom Footer Matrix: Cloud Sync, BGM, Viewport Switch */}
-      <div className="p-3 border-t border-[#fcee0a]/20 bg-black/60 space-y-2.5 text-xs font-mono">
+      <div className="p-3 border-t border-[color:var(--accent)]/20 bg-black/60 space-y-2.5 text-xs font-mono">
         {/* Cloud Sync Telemetry */}
         <div className="flex items-center justify-between text-[11px] text-zinc-400">
           <div className="flex items-center gap-2">
@@ -332,10 +341,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={onManualSync}
             disabled={syncState.isSyncing}
             title="Trigger Manual Cloud Sync"
-            className="p-1 rounded text-zinc-400 hover:text-[#fcee0a] hover:bg-zinc-900 transition-colors cursor-pointer"
+            className="p-1 rounded text-zinc-400 hover:text-[color:var(--accent)] hover:bg-zinc-900 transition-colors cursor-pointer"
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 ${syncState.isSyncing ? 'animate-spin text-[#fcee0a]' : ''}`}
+              className={`w-3.5 h-3.5 ${syncState.isSyncing ? 'animate-spin text-[color:var(--accent)]' : ''}`}
             />
           </button>
         </div>
@@ -348,14 +357,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onOpenMusicPlayer();
             }
           }}
-          className="p-2 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-[#fcee0a]/40 flex items-center justify-between cursor-pointer transition-colors group"
+          className="p-2 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-[color:var(--accent)]/40 flex items-center justify-between cursor-pointer transition-colors group"
           title="Click to open Cyber Soundtrack Station (Upload / Switch Track)"
         >
           <div className="flex items-center gap-2 overflow-hidden">
-            <Radio className="w-3.5 h-3.5 text-[#ff0055] shrink-0 animate-pulse group-hover:scale-110 transition-transform" />
+            <Radio className="w-3.5 h-3.5 text-[color:var(--tertiary)] shrink-0 animate-pulse group-hover:scale-110 transition-transform" />
             {!isCollapsed && (
               <div className="truncate">
-                <span className="block text-[9px] text-[#fcee0a] font-bold uppercase truncate">
+                <span className="block text-[9px] text-[color:var(--accent)] font-bold uppercase truncate">
                   CYBER SOUNDTRACK
                 </span>
                 <span className="block text-[9px] text-zinc-400 group-hover:text-white truncate">
@@ -371,12 +380,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onToggleMute();
             }}
             title={isMuted ? 'Unmute OST' : 'Mute OST'}
-            className="p-1 rounded-md text-zinc-400 hover:text-[#fcee0a] bg-zinc-900 border border-zinc-800 cursor-pointer shrink-0"
+            className="p-1 rounded-md text-zinc-400 hover:text-[color:var(--accent)] bg-zinc-900 border border-zinc-800 cursor-pointer shrink-0"
           >
             {isMuted ? (
               <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
             ) : (
-              <Volume2 className="w-3.5 h-3.5 text-[#fcee0a] animate-pulse" />
+              <Volume2 className="w-3.5 h-3.5 text-[color:var(--accent)] animate-pulse" />
             )}
           </button>
         </div>
@@ -389,12 +398,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             {viewMode === 'desktop' ? (
               <>
-                <Smartphone className="w-3.5 h-3.5 text-[#00f0ff]" />
+                <Smartphone className="w-3.5 h-3.5 text-[color:var(--secondary)]" />
                 {!isCollapsed && <span>Android View</span>}
               </>
             ) : (
               <>
-                <Laptop className="w-3.5 h-3.5 text-[#fcee0a]" />
+                <Laptop className="w-3.5 h-3.5 text-[color:var(--accent)]" />
                 {!isCollapsed && <span>Desktop View</span>}
               </>
             )}
@@ -407,7 +416,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onReplayIntro();
               }}
               title="Replay Cyberpunk Intro"
-              className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-[#fcee0a] cursor-pointer"
+              className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-[color:var(--accent)] cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>

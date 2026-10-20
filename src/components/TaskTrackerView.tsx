@@ -101,7 +101,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
     <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden box-border">
       {/* Top Banner & Quick Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
-        <div className="p-3 sm:p-4 rounded-2xl bg-zinc-950/80 border border-[#fcee0a]/20 shadow-xs flex items-center justify-between">
+        <div className="p-3 sm:p-4 rounded-2xl bg-zinc-950/80 border border-[color:var(--accent)]/20 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] sm:text-xs font-mono font-bold uppercase text-zinc-400">
               Total Tasks
@@ -169,7 +169,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks, tags, projects, or source..."
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-hidden focus:border-[#fcee0a] font-mono transition-colors"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-hidden focus:border-[color:var(--accent)] font-mono transition-colors"
             />
             {searchQuery && (
               <button
@@ -200,7 +200,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
                 soundFX.playBlip();
                 onOpenNewTaskModal();
               }}
-              className="px-4 py-2 rounded-xl bg-[#fcee0a] hover:bg-[#ffea00] text-black font-black font-mono text-xs flex items-center gap-1.5 shadow-md shadow-[#fcee0a]/20 transition-all cursor-pointer border border-black"
+              className="px-4 py-2 rounded-xl bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black font-black font-mono text-xs flex items-center gap-1.5 shadow-md shadow-[color:var(--accent)]/20 transition-all cursor-pointer border border-black"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Add Task</span>
@@ -228,7 +228,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
                 }}
                 className={`px-2.5 py-1 rounded-lg transition-all text-xs cursor-pointer ${
                   statusFilter === st.id
-                    ? 'bg-[#fcee0a] text-black font-black shadow-xs'
+                    ? 'bg-[color:var(--accent)] text-black font-black shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -246,7 +246,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
                 soundFX.playBlip();
                 setSelectedProject(e.target.value);
               }}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-hidden focus:border-[#fcee0a] cursor-pointer"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-hidden focus:border-[color:var(--accent)] cursor-pointer"
             >
               <option value="all">All Projects</option>
               {existingProjects.map((proj) => (
@@ -263,7 +263,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
                 soundFX.playBlip();
                 setSelectedPriority(e.target.value as Priority | 'all');
               }}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-hidden focus:border-[#fcee0a] cursor-pointer"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-hidden focus:border-[color:var(--accent)] cursor-pointer"
             >
               <option value="all">All Priorities</option>
               <option value="Urgent">Urgent</option>
@@ -279,7 +279,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
                 soundFX.playBlip();
                 setSelectedSource(e.target.value as AppSource | 'all');
               }}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-hidden focus:border-[#fcee0a] cursor-pointer"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-hidden focus:border-[color:var(--accent)] cursor-pointer"
             >
               <option value="all">All Sources</option>
               <option value="manual">Manual</option>
@@ -298,7 +298,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
                 soundFX.playBlip();
                 setSortBy(e.target.value as any);
               }}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-hidden focus:border-[#fcee0a] cursor-pointer"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-hidden focus:border-[color:var(--accent)] cursor-pointer"
             >
               <option value="due">Sort: Due Date</option>
               <option value="priority">Sort: Priority</option>
@@ -313,7 +313,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
         {filteredTasks.length === 0 ? (
           <div className="p-8 sm:p-12 text-center rounded-2xl bg-zinc-950/60 border border-zinc-800/80 space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
-              <CheckCircle2 className="w-6 h-6 text-[#fcee0a]" />
+              <CheckCircle2 className="w-6 h-6 text-[color:var(--accent)]" />
             </div>
             <h3 className="text-sm sm:text-base font-bold text-white font-mono">
               No matching tasks found
@@ -326,7 +326,7 @@ export const TaskTrackerView: React.FC<TaskTrackerViewProps> = ({
                 soundFX.playBlip();
                 onOpenNewTaskModal();
               }}
-              className="px-4 py-2 rounded-xl bg-[#fcee0a] text-black font-black font-mono text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-md"
+              className="px-4 py-2 rounded-xl bg-[color:var(--accent)] text-black font-black font-mono text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-md"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               Create New Task

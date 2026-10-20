@@ -1,4 +1,5 @@
 import { Task, SyncState, AppConnectorConfig, ThemeMode } from '../types';
+import { THEME_ORDER, isThemeMode } from './theme';
 
 const STORAGE_KEYS = {
   TASKS: 'taskorbit_tasks_v1',
@@ -219,7 +220,9 @@ export function loadTasksFromStorage(): Task[] {
       localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(INITIAL_TASKS));
       return INITIAL_TASKS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    // Guard against corrupted / hand-edited storage that would crash the UI
+    return Array.isArray(parsed) ? parsed : INITIAL_TASKS;
   } catch (err) {
     console.error('Error loading tasks from storage:', err);
     return INITIAL_TASKS;
@@ -241,7 +244,8 @@ export function loadConnectors(): AppConnectorConfig[] {
       localStorage.setItem(STORAGE_KEYS.CONNECTORS, JSON.stringify(DEFAULT_CONNECTORS));
       return DEFAULT_CONNECTORS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : DEFAULT_CONNECTORS;
   } catch {
     return DEFAULT_CONNECTORS;
   }
@@ -257,8 +261,8 @@ export function saveConnectors(connectors: AppConnectorConfig[]): void {
 
 export function loadTheme(): ThemeMode {
   try {
-    const theme = (localStorage.getItem(STORAGE_KEYS.THEME) as ThemeMode) || 'cyberpunk';
-    return theme;
+    const stored = localStorage.getItem(STORAGE_KEYS.THEME);
+    return isThemeMode(stored) ? stored : 'cyberpunk';
   } catch {
     return 'cyberpunk';
   }
@@ -275,17 +279,14 @@ export function saveTheme(theme: ThemeMode): void {
 
 export function applyThemeToDOM(theme: ThemeMode): void {
   const root = document.documentElement;
-  const themeClasses = ['theme-cyberpunk', 'theme-matrix', 'theme-synthwave', 'theme-obsidian', 'theme-solar'];
-  themeClasses.forEach((cls) => root.classList.remove(cls));
+  THEME_ORDER.forEach((t) => root.classList.remove(`theme-${t}`));
 
   root.classList.add(`theme-${theme}`);
 
-  // Dark mode is active for cyberpunk, matrix, synthwave, obsidian
-  if (theme !== 'solar') {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
+  // Every component is authored dark-first, so `.dark` stays on for all themes.
+  // The light "solar" theme is produced by an inversion filter in index.css.
+  // (Native controls stay `color-scheme: dark` for the same reason: the filter flips them to light.)
+  root.classList.add('dark');
 }
 
 export async function syncWithCloudStorage(

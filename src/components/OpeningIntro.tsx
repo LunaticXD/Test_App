@@ -65,6 +65,13 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
     };
   }, []);
 
+  // The banner promises "Auto-entering in Ns" - actually do it when the countdown ends
+  useEffect(() => {
+    if (autoEnterCountdown === 0) {
+      onEnterApp();
+    }
+  }, [autoEnterCountdown, onEnterApp]);
+
   const handleJackIn = () => {
     soundFX.playBoot();
     soundFX.playTrack();
@@ -84,7 +91,7 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.05 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-50 flex flex-col justify-between p-4 sm:p-8 bg-[#070710] text-white overflow-hidden select-none"
+      className="fixed inset-0 z-50 flex flex-col justify-between p-4 sm:p-8 bg-[color:var(--bg)] text-white overflow-hidden select-none"
     >
       <input
         ref={fileInputRef}
@@ -104,21 +111,21 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
           className="absolute inset-0"
           style={{
             backgroundImage: `
-              radial-gradient(circle at 50% 30%, rgba(252, 238, 10, 0.18) 0%, transparent 65%),
-              linear-gradient(rgba(252, 238, 10, 0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(252, 238, 10, 0.08) 1px, transparent 1px)
+              radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 65%),
+              linear-gradient(color-mix(in srgb, var(--accent) 8%, transparent) 1px, transparent 1px),
+              linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, transparent) 1px, transparent 1px)
             `,
             backgroundSize: '100% 100%, 36px 36px, 36px 36px',
           }}
         ></div>
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#fcee0a] via-[#ff0055] to-cyan-400 animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#fcee0a]"></div>
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[color:var(--accent)] via-[color:var(--tertiary)] to-cyan-400 animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[color:var(--accent)]"></div>
       </div>
 
       {/* Top HUD Telemetry Bar */}
-      <div className="relative z-10 flex items-center justify-between border-b border-[#fcee0a]/30 pb-3 font-mono text-xs text-[#fcee0a]">
+      <div className="relative z-10 flex items-center justify-between border-b border-[color:var(--accent)]/30 pb-3 font-mono text-xs text-[color:var(--accent)]">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#fcee0a] animate-ping"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[color:var(--accent)] animate-ping"></span>
           <span className="font-black tracking-widest uppercase">
             [CYBERSPACE // NEURAL GATEWAY]
           </span>
@@ -135,10 +142,10 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
 
           <button
             onClick={onToggleMute}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/60 border border-[#fcee0a]/40 text-[#fcee0a] text-xs font-bold hover:bg-[#fcee0a] hover:text-black transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/60 border border-[color:var(--accent)]/40 text-[color:var(--accent)] text-xs font-bold hover:bg-[color:var(--accent)] hover:text-black transition-colors cursor-pointer"
           >
             {!isMuted ? (
-              <Volume2 className="w-3.5 h-3.5 text-[#fcee0a] animate-pulse" />
+              <Volume2 className="w-3.5 h-3.5 text-[color:var(--accent)] animate-pulse" />
             ) : (
               <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
             )}
@@ -153,32 +160,32 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative mx-auto rounded-3xl p-1 bg-gradient-to-b from-[#fcee0a] via-cyan-400 to-[#ff0055]/30 shadow-2xl shadow-[#fcee0a]/20"
+          className="relative mx-auto rounded-3xl p-1 bg-gradient-to-b from-[color:var(--accent)] via-cyan-400 to-[color:var(--tertiary)]/30 shadow-2xl shadow-[color:var(--accent)]/20"
         >
-          <div className="rounded-[22px] bg-[#070710] p-6 sm:p-8 border border-zinc-800 relative overflow-hidden text-left">
+          <div className="rounded-[22px] bg-[color:var(--bg)] p-6 sm:p-8 border border-zinc-800 relative overflow-hidden text-left">
             {/* Cyber Corner Brackets */}
-            <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#fcee0a]"></div>
-            <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#fcee0a]"></div>
-            <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#fcee0a]"></div>
-            <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#fcee0a]"></div>
+            <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[color:var(--accent)]"></div>
+            <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[color:var(--accent)]"></div>
+            <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[color:var(--accent)]"></div>
+            <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[color:var(--accent)]"></div>
 
             {/* Neural Gateway Header */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-zinc-800">
               <div>
-                <span className="text-[10px] font-black tracking-widest text-[#fcee0a] uppercase font-mono px-2 py-0.5 rounded-sm bg-[#fcee0a]/20 border border-[#fcee0a]/40">
+                <span className="text-[10px] font-black tracking-widest text-[color:var(--accent)] uppercase font-mono px-2 py-0.5 rounded-sm bg-[color:var(--accent)]/20 border border-[color:var(--accent)]/40">
                   ARASAKA NEURAL RECOGNITION
                 </span>
                 <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-2 font-mono">
-                  CYBER<span className="text-[#fcee0a]">SPACE</span>
+                  CYBER<span className="text-[color:var(--accent)]">SPACE</span>
                 </h1>
                 <p className="text-xs text-zinc-300 font-mono mt-1">
                   Cross-Platform Tasks, Kanban Board, Desktop Auto-Organizer & Connected Apps
                 </p>
               </div>
 
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[#fcee0a] to-cyan-400 p-0.5 shrink-0 shadow-lg shadow-[#fcee0a]/30">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[color:var(--accent)] to-cyan-400 p-0.5 shrink-0 shadow-lg shadow-[color:var(--accent)]/30">
                 <div className="w-full h-full rounded-[14px] bg-black flex flex-col items-center justify-center text-center p-1">
-                  <Cpu className="w-6 h-6 text-[#fcee0a] animate-pulse" />
+                  <Cpu className="w-6 h-6 text-[color:var(--accent)] animate-pulse" />
                   <span className="text-[9px] font-black text-cyan-300 font-mono mt-1">
                     NEURAL HUB
                   </span>
@@ -187,7 +194,7 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
             </div>
 
             {/* Boot Sequence Log */}
-            <div className="my-5 p-4 rounded-xl bg-black/80 border border-[#fcee0a]/30 font-mono text-xs space-y-1.5">
+            <div className="my-5 p-4 rounded-xl bg-black/80 border border-[color:var(--accent)]/30 font-mono text-xs space-y-1.5">
               <div className="flex items-center gap-2 text-cyan-400">
                 <Cpu className="w-3.5 h-3.5" />
                 <span>[INIT] SANDEVISTAN MK.4 NEURAL ADAPTER: SYNCHRONIZED</span>
@@ -196,7 +203,7 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-2 text-[#fcee0a]"
+                  className="flex items-center gap-2 text-[color:var(--accent)]"
                 >
                   <Zap className="w-3.5 h-3.5" />
                   <span>[DATA] TASK TRACKER & DESKTOP FILE ROUTING ENGINE: ARMED</span>
@@ -206,7 +213,7 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-2 text-[#ff0055]"
+                  className="flex items-center gap-2 text-[color:var(--tertiary)]"
                 >
                   <Disc className="w-3.5 h-3.5 animate-spin" />
                   <span>[AUDIO] SOUNDTRACK LOADED: {trackName.toUpperCase()}</span>
@@ -252,10 +259,10 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
 
                 {/* Equalizer Wave Bars */}
                 <div className="flex items-end gap-1 h-6 pl-2">
-                  <span className="w-1 bg-[#fcee0a] h-3 animate-bounce"></span>
-                  <span className="w-1 bg-[#ff0055] h-6 animate-bounce" style={{ animationDelay: '0.15s' }}></span>
+                  <span className="w-1 bg-[color:var(--accent)] h-3 animate-bounce"></span>
+                  <span className="w-1 bg-[color:var(--tertiary)] h-6 animate-bounce" style={{ animationDelay: '0.15s' }}></span>
                   <span className="w-1 bg-cyan-400 h-4 animate-bounce" style={{ animationDelay: '0.3s' }}></span>
-                  <span className="w-1 bg-[#fcee0a] h-5 animate-bounce" style={{ animationDelay: '0.45s' }}></span>
+                  <span className="w-1 bg-[color:var(--accent)] h-5 animate-bounce" style={{ animationDelay: '0.45s' }}></span>
                 </div>
               </div>
             </div>
@@ -270,10 +277,10 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <motion.button
-            whileHover={{ scale: 1.05, boxShadow: '0 0 35px rgba(252, 238, 10, 0.6)' }}
+            whileHover={{ scale: 1.05, boxShadow: '0 0 35px color-mix(in srgb, var(--accent) 60%, transparent)' }}
             whileTap={{ scale: 0.95 }}
             onClick={handleJackIn}
-            className="px-8 py-4 bg-[#fcee0a] hover:bg-[#ffea00] text-black font-black text-sm sm:text-base tracking-widest uppercase rounded-2xl shadow-xl shadow-[#fcee0a]/30 flex items-center gap-3 font-mono border-2 border-black transition-all cursor-pointer"
+            className="px-8 py-4 bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black font-black text-sm sm:text-base tracking-widest uppercase rounded-2xl shadow-xl shadow-[color:var(--accent)]/30 flex items-center gap-3 font-mono border-2 border-black transition-all cursor-pointer"
           >
             <Play className="w-5 h-5 fill-black" />
             <span>JACK IN // ENTER STUDIO</span>
@@ -285,8 +292,10 @@ export const OpeningIntro: React.FC<OpeningIntroProps> = ({
       {/* Bottom Footer Info */}
       <div className="relative z-10 flex items-center justify-between border-t border-zinc-800 pt-3 font-mono text-[11px] text-zinc-400">
         <span>CYBERSPACE // NIGHT CITY OS</span>
-        <span className="text-[#fcee0a] font-bold">
-          Auto-entering in {autoEnterCountdown}s... Click JACK IN to launch now
+        <span className="text-[color:var(--accent)] font-bold">
+          {autoEnterCountdown > 0
+            ? `Auto-entering in ${autoEnterCountdown}s... Click JACK IN to launch now`
+            : 'Entering...'}
         </span>
       </div>
     </motion.div>

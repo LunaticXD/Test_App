@@ -18,6 +18,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { soundFX, TrackMetadata } from '../lib/audio';
+import { getThemeColors } from '../lib/theme';
 
 interface CyberMusicPlayerModalProps {
   isOpen: boolean;
@@ -83,6 +84,7 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     let animId: number;
+    const themeColors = getThemeColors();
 
     const renderVisualizer = () => {
       const canvas = canvasRef.current;
@@ -116,9 +118,9 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
 
         // Gradient from Electric Yellow to Neon Cyan
         const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
-        gradient.addColorStop(0, '#fcee0a');
-        gradient.addColorStop(0.5, '#00f0ff');
-        gradient.addColorStop(1, '#ff0055');
+        gradient.addColorStop(0, themeColors.accent);
+        gradient.addColorStop(0.5, themeColors.secondary);
+        gradient.addColorStop(1, themeColors.tertiary);
 
         ctx.fillStyle = gradient;
         ctx.fillRect(x, canvas.height - barHeight, barWidth - 2, barHeight);
@@ -175,17 +177,17 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
         initial={{ scale: 0.94, opacity: 0, y: 15 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.94, opacity: 0, y: 15 }}
-        className="w-full max-w-2xl bg-[#090912] border-2 border-[#fcee0a]/40 rounded-3xl shadow-2xl shadow-[#fcee0a]/20 overflow-hidden flex flex-col font-mono text-white relative"
+        className="w-full max-w-2xl bg-[color:var(--bg)] border-2 border-[color:var(--accent)]/40 rounded-3xl shadow-2xl shadow-[color:var(--accent)]/20 overflow-hidden flex flex-col font-mono text-white relative"
       >
         {/* Top Glowing Header Accent */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-[#fcee0a] via-cyan-400 to-[#ff0055] animate-pulse"></div>
+        <div className="h-1.5 w-full bg-gradient-to-r from-[color:var(--accent)] via-cyan-400 to-[color:var(--tertiary)] animate-pulse"></div>
 
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-black/60">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#fcee0a] via-cyan-400 to-[#ff0055] p-0.5 shadow-md shadow-[#fcee0a]/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[color:var(--accent)] via-cyan-400 to-[color:var(--tertiary)] p-0.5 shadow-md shadow-[color:var(--accent)]/20 flex items-center justify-center">
               <div className="w-full h-full rounded-[10px] bg-black flex items-center justify-center">
-                <Disc className="w-5 h-5 text-[#fcee0a] animate-spin" />
+                <Disc className="w-5 h-5 text-[color:var(--accent)] animate-spin" />
               </div>
             </div>
             <div>
@@ -193,7 +195,7 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
                 <h3 className="text-base font-black text-white tracking-wide">
                   CYBER SOUNDTRACK STATION
                 </h3>
-                <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-[#fcee0a]/20 text-[#fcee0a] border border-[#fcee0a]/40">
+                <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-[color:var(--accent)]/20 text-[color:var(--accent)] border border-[color:var(--accent)]/40">
                   LET YOU DOWN
                 </span>
               </div>
@@ -208,7 +210,7 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
               soundFX.playBlip();
               onClose();
             }}
-            className="p-2 rounded-xl text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 hover:border-[#fcee0a]/50 cursor-pointer"
+            className="p-2 rounded-xl text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 hover:border-[color:var(--accent)]/50 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -219,9 +221,9 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
           {/* Main Track Display Card */}
           <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col sm:flex-row items-center gap-5 relative overflow-hidden">
             {/* Visual Vinyl Disc */}
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-pink-500 via-[#fcee0a] to-cyan-400 p-1 shrink-0 shadow-lg shadow-[#fcee0a]/25 flex items-center justify-center relative">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-pink-500 via-[color:var(--accent)] to-cyan-400 p-1 shrink-0 shadow-lg shadow-[color:var(--accent)]/25 flex items-center justify-center relative">
               <div className="w-full h-full rounded-[14px] bg-black flex flex-col items-center justify-center p-2 text-center">
-                <Radio className="w-8 h-8 text-[#fcee0a] mb-1 animate-pulse" />
+                <Radio className="w-8 h-8 text-[color:var(--accent)] mb-1 animate-pulse" />
                 <span className="text-[9px] font-bold text-cyan-300 uppercase truncate max-w-full">
                   {track.source === 'custom_file' ? 'CUSTOM AUDIO' : 'EDGERUNNERS'}
                 </span>
@@ -231,7 +233,7 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
             {/* Track Info & Real-Time Waveform */}
             <div className="flex-1 w-full space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-[#fcee0a] tracking-wider uppercase">
+                <span className="text-[10px] font-bold text-[color:var(--accent)] tracking-wider uppercase">
                   {track.source === 'custom_file' ? 'ACTIVE UPLOADED TRACK' : 'FEATURED SOUNDTRACK'}
                 </span>
                 <span className="text-[11px] text-zinc-400 font-mono">
@@ -270,7 +272,7 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
                 setCurrentTime(val);
                 soundFX.seek(val);
               }}
-              className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#fcee0a]"
+              className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[color:var(--accent)]"
             />
             <div className="flex justify-between text-[11px] text-zinc-500">
               <span>{formatTime(currentTime)}</span>
@@ -289,7 +291,7 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
                   soundFX.playBlip();
                   soundFX.togglePlay();
                 }}
-                className="px-6 py-2.5 rounded-xl bg-[#fcee0a] hover:bg-[#ffea00] text-black font-black text-xs flex items-center gap-2 shadow-lg shadow-[#fcee0a]/25 cursor-pointer border border-black"
+                className="px-6 py-2.5 rounded-xl bg-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] text-black font-black text-xs flex items-center gap-2 shadow-lg shadow-[color:var(--accent)]/25 cursor-pointer border border-black"
               >
                 {isPlaying ? <Pause className="w-4 h-4 fill-black" /> : <Play className="w-4 h-4 fill-black" />}
                 <span>{isPlaying ? 'PAUSE BGM' : 'PLAY SOUNDTRACK'}</span>
@@ -311,9 +313,9 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
             <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
               <button
                 onClick={() => soundFX.toggleMute()}
-                className="p-2 rounded-xl text-zinc-400 hover:text-[#fcee0a] bg-zinc-900 border border-zinc-800 cursor-pointer"
+                className="p-2 rounded-xl text-zinc-400 hover:text-[color:var(--accent)] bg-zinc-900 border border-zinc-800 cursor-pointer"
               >
-                {isMuted ? <VolumeX className="w-4 h-4 text-zinc-500" /> : <Volume2 className="w-4 h-4 text-[#fcee0a]" />}
+                {isMuted ? <VolumeX className="w-4 h-4 text-zinc-500" /> : <Volume2 className="w-4 h-4 text-[color:var(--accent)]" />}
               </button>
               <input
                 type="range"
@@ -338,9 +340,9 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
           </div>
 
           {/* Synchronized Cyber Lyrics Screen */}
-          <div className="p-4 rounded-2xl bg-black/70 border border-[#fcee0a]/20 space-y-2">
+          <div className="p-4 rounded-2xl bg-black/70 border border-[color:var(--accent)]/20 space-y-2">
             <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1 border-b border-zinc-800">
-              <span className="text-[#fcee0a] font-bold flex items-center gap-1.5">
+              <span className="text-[color:var(--accent)] font-bold flex items-center gap-1.5">
                 <Music className="w-3.5 h-3.5" />
                 SYNCHRONIZED CYBER LYRICS
               </span>
@@ -363,8 +365,8 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
             onDrop={handleDrop}
             className={`p-6 border-2 border-dashed rounded-2xl text-center transition-all ${
               isDraggingFile
-                ? 'border-[#fcee0a] bg-[#fcee0a]/10 scale-[1.01]'
-                : 'border-zinc-800 hover:border-[#fcee0a]/40 bg-zinc-950/60'
+                ? 'border-[color:var(--accent)] bg-[color:var(--accent)]/10 scale-[1.01]'
+                : 'border-zinc-800 hover:border-[color:var(--accent)]/40 bg-zinc-950/60'
             }`}
           >
             <input
@@ -380,7 +382,7 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
             />
 
             <div className="flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#fcee0a]">
+              <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[color:var(--accent)]">
                 <Upload className="w-6 h-6 animate-bounce" />
               </div>
               <h4 className="text-sm font-bold text-white">
@@ -430,7 +432,7 @@ export const CyberMusicPlayerModal: React.FC<CyberMusicPlayerModalProps> = ({
         {/* Modal Footer */}
         <div className="px-6 py-3 border-t border-zinc-800 bg-black/60 flex items-center justify-between text-xs text-zinc-400">
           <span className="flex items-center gap-1.5 text-cyan-400 text-[11px]">
-            <Sparkles className="w-3.5 h-3.5 text-[#fcee0a]" />
+            <Sparkles className="w-3.5 h-3.5 text-[color:var(--accent)]" />
             Persistent audio saved across sessions in IndexedDB
           </span>
           <button
